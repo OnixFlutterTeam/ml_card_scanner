@@ -1,0 +1,1 @@
+enum CardOrientation { portrait, landscape }
