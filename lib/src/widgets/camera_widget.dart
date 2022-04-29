@@ -6,12 +6,14 @@ import 'package:google_ml_kit/google_ml_kit.dart';
 class CameraWidget extends StatefulWidget {
   final CameraController cameraController;
   final CameraDescription cameraDescription;
+  final int scannerDelay;
 
   const CameraWidget(
       {Key? key,
       required this.cameraController,
       required this.cameraDescription,
-      required this.onImage})
+      required this.onImage,
+      required this.scannerDelay})
       : super(key: key);
 
   final Function(InputImage inputImage) onImage;
@@ -22,7 +24,6 @@ class CameraWidget extends StatefulWidget {
 
 class CameraViewState extends State<CameraWidget> {
   int _lastFrameDecode = 0;
-  final _decodeDelay = 400;
 
   Future<void> stopCameraStream() async =>
       widget.cameraController.stopImageStream();
@@ -53,7 +54,7 @@ class CameraViewState extends State<CameraWidget> {
 
   Future _processCameraImage(CameraImage image) async {
     if ((DateTime.now().millisecondsSinceEpoch - _lastFrameDecode) <
-        _decodeDelay) {
+        widget.scannerDelay) {
       return;
     }
     _lastFrameDecode = DateTime.now().millisecondsSinceEpoch;

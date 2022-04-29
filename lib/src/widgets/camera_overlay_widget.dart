@@ -3,13 +3,19 @@ import 'package:ml_card_scanner/src/model/card_orientation.dart';
 
 class CameraOverlayWidget extends StatelessWidget {
   final CardOrientation cardOrientation;
-  const CameraOverlayWidget({Key? key, required this.cardOrientation})
+  final double overlayBorderRadius;
+  final Color overlayColorFilter;
+  const CameraOverlayWidget(
+      {Key? key,
+      required this.cardOrientation,
+      required this.overlayBorderRadius,
+      required this.overlayColorFilter})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ColorFiltered(
-      colorFilter: const ColorFilter.mode(Colors.black54, BlendMode.srcOut),
+      colorFilter: ColorFilter.mode(overlayColorFilter, BlendMode.srcOut),
       child: Stack(
         children: [
           Container(
@@ -19,7 +25,7 @@ class CameraOverlayWidget extends StatelessWidget {
             child: Align(
               alignment: Alignment.bottomRight,
               child: Center(
-                child: getContainer(context),
+                child: _getContainer(context),
               ),
             ),
           ),
@@ -28,19 +34,21 @@ class CameraOverlayWidget extends StatelessWidget {
     );
   }
 
-  Container getContainer(context) {
+  Widget _getContainer(context) {
     if (cardOrientation == CardOrientation.portrait) {
       return Container(
-        height: (MediaQuery.of(context).size.width * 0.7) * 1.6,
+        height: (MediaQuery.of(context).size.width * 0.75) * 1.6,
         width: (MediaQuery.of(context).size.width * 0.75),
         decoration: BoxDecoration(
-            color: Colors.black, borderRadius: BorderRadius.circular(25)),
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(overlayBorderRadius)),
       );
     }
     return Container(
-        height: (MediaQuery.of(context).size.width * 0.7),
-        width: (MediaQuery.of(context).size.width * 0.7) * 1.35,
+        height: (MediaQuery.of(context).size.width * 0.95) / 1.6,
+        width: (MediaQuery.of(context).size.width * 0.95),
         decoration: BoxDecoration(
-            color: Colors.black, borderRadius: BorderRadius.circular(25)));
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(overlayBorderRadius)));
   }
 }

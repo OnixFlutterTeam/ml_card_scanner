@@ -12,9 +12,21 @@ import 'package:permission_handler/permission_handler.dart';
 
 class CameraScreen extends StatefulWidget {
   final CardOrientation cardOrientation;
+  final double overlayBorderRadius;
+  final Color overlayColorFilter;
+  final String overlayText;
+  final TextStyle overlayTextStyle;
+  final int scannerDelay;
 
-  const CameraScreen({Key? key, required this.cardOrientation})
-      : super(key: key);
+  const CameraScreen({
+    Key? key,
+    required this.cardOrientation,
+    required this.overlayBorderRadius,
+    required this.overlayColorFilter,
+    required this.overlayText,
+    required this.scannerDelay,
+    required this.overlayTextStyle,
+  }) : super(key: key);
 
   @override
   _CameraScreenState createState() => _CameraScreenState();
@@ -37,8 +49,10 @@ class _CameraScreenState extends State<CameraScreen>
 
   @override
   void dispose() {
-    _controller.dispose();
-    WidgetsBinding.instance?.removeObserver(_cameraLifecycle);
+    if (mounted) {
+      WidgetsBinding.instance?.removeObserver(_cameraLifecycle);
+      _controller.dispose();
+    }
     super.dispose();
   }
 
@@ -53,12 +67,25 @@ class _CameraScreenState extends State<CameraScreen>
                   cameraController: _controller,
                   cameraDescription: _camera,
                   onImage: _detect,
+                  scannerDelay: widget.scannerDelay,
                 )
               : const Center(
                   child: CircularProgressIndicator(),
                 ),
           CameraOverlayWidget(
             cardOrientation: widget.cardOrientation,
+            overlayBorderRadius: widget.overlayBorderRadius,
+            overlayColorFilter: widget.overlayColorFilter,
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: (MediaQuery.of(context).size.height / 5),
+            child: Text(
+              widget.overlayText,
+              style: widget.overlayTextStyle,
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
@@ -109,7 +136,7 @@ class _CameraScreenState extends State<CameraScreen>
     var resultCard = await _cardParser.detectCardContent(image);
     Logger.log('Detect Card Details', resultCard.toString());
     if (resultCard?.isValid() ?? false) {
-      Navigator.of(context).pop(resultCard);
+      Navigator.pop(context, resultCard);
     }
   }
 }
