@@ -1,1 +1,0 @@
-enum Routes { materialPageRoute, cupertinoPageRoute }

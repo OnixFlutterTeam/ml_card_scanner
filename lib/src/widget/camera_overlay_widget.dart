@@ -5,12 +5,13 @@ class CameraOverlayWidget extends StatelessWidget {
   final CardOrientation cardOrientation;
   final double overlayBorderRadius;
   final Color overlayColorFilter;
-  const CameraOverlayWidget(
-      {Key? key,
-      required this.cardOrientation,
-      required this.overlayBorderRadius,
-      required this.overlayColorFilter})
-      : super(key: key);
+
+  const CameraOverlayWidget({
+    Key? key,
+    required this.cardOrientation,
+    required this.overlayBorderRadius,
+    required this.overlayColorFilter,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -40,15 +41,18 @@ class CameraOverlayWidget extends StatelessWidget {
         height: (MediaQuery.of(context).size.width * 0.75) * 1.6,
         width: (MediaQuery.of(context).size.width * 0.75),
         decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(overlayBorderRadius)),
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(overlayBorderRadius),
+        ),
       );
     }
     return Container(
-        height: (MediaQuery.of(context).size.width * 0.95) / 1.6,
-        width: (MediaQuery.of(context).size.width * 0.95),
-        decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(overlayBorderRadius)));
+      height: (MediaQuery.of(context).size.width * 0.95) / 1.6,
+      width: (MediaQuery.of(context).size.width * 0.95),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(overlayBorderRadius),
+      ),
+    );
   }
 }

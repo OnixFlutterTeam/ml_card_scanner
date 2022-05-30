@@ -1,5 +1,5 @@
 import 'dart:core';
-import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:ml_card_scanner/src/model/card_info.dart';
 import 'package:ml_card_scanner/src/utils/string_extension.dart';
 
@@ -11,7 +11,7 @@ class CardParserUtil {
   final String _cardVisaParam = '4';
   final String _cardMasterCardParam = '5';
   final _expiryDateRegEx = r'/^(0[1-9]|1[0-2])\/?([0-9]{4}|[0-9]{2})$/;';
-  final _textDetector = GoogleMlKit.vision.textDetectorV2();
+  final _textDetector = TextRecognizer(script: TextRecognitionScript.latin);
 
   Future<CardInfo?> detectCardContent(InputImage inputImage) async {
     var input = await _textDetector.processImage(inputImage);

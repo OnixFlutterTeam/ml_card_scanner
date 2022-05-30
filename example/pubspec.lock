@@ -21,14 +21,14 @@ packages:
       name: camera
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.9.4+21"
+    version: "0.9.7+1"
   camera_platform_interface:
     dependency: transitive
     description:
       name: camera_platform_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.1.6"
+    version: "2.2.0"
   camera_web:
     dependency: transitive
     description:
@@ -86,26 +86,26 @@ packages:
     source: hosted
     version: "1.2.0"
   firebase_core:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: firebase_core
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.15.0"
+    version: "1.17.1"
   firebase_core_platform_interface:
     dependency: transitive
     description:
       name: firebase_core_platform_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "4.2.5"
+    version: "4.4.0"
   firebase_core_web:
     dependency: transitive
     description:
       name: firebase_core_web
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.6.2"
+    version: "1.6.4"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -135,13 +135,20 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  google_ml_kit:
+  google_mlkit_commons:
     dependency: transitive
     description:
-      name: google_ml_kit
+      name: google_mlkit_commons
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.7.3"
+    version: "0.2.0"
+  google_mlkit_text_recognition:
+    dependency: transitive
+    description:
+      name: google_mlkit_text_recognition
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.3.0"
   js:
     dependency: transitive
     description:

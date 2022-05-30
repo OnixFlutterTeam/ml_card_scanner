@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ml_card_scanner/ml_card_scanner.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+/*  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );*/
   runApp(const MaterialApp(home: MainScreen()));
 }
 
@@ -14,6 +18,21 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   CardInfo? _cardInfo;
+  final ScannerWidgetController _controller = ScannerWidgetController();
+
+  @override
+  void initState() {
+    _controller
+      ..setCardListener((value) {
+        setState(() {
+          _cardInfo = value;
+        });
+      })
+      ..setErrorListener((exception) {
+        print('Error: ${exception.message}');
+      });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,32 +43,28 @@ class _MainScreenState extends State<MainScreen> {
       body: Center(
         child: Column(
           children: [
-            Text(_cardInfo?.toString() ?? 'No Card Details'),
-            const SizedBox(
-              height: 20,
+            Expanded(
+              child: ScannerWidget(
+                controller: _controller,
+              ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                _parseCard(context);
-              },
-              child: const Text('Parse Card'),
-            ),
+            Container(
+                width: MediaQuery.of(context).size.width,
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Text(_cardInfo?.toString() ?? 'No Card Details'),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                  ],
+                )),
           ],
         ),
       ),
     );
-  }
-
-  void _parseCard(BuildContext context) async {
-    CardInfo? cardInfo = await MlCardScanner.scanCard(context,
-        cardOrientation: CardOrientation.landscape,
-        overlayBorderRadius: 50,
-        overlayColorFilter: Colors.cyan.withOpacity(0.4),
-        overlayText: "Scanner card",
-        scannerDelay: 600,
-        routes: Routes.cupertinoPageRoute);
-    setState(() {
-      _cardInfo = cardInfo;
-    });
   }
 }
