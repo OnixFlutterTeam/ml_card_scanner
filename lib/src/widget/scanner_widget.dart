@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:ml_card_scanner/ml_card_scanner.dart';
 import 'package:ml_card_scanner/src/model/scanner_exception.dart';
-import 'package:ml_card_scanner/src/utils/camera_lifecycle.dart';
 import 'package:ml_card_scanner/src/utils/card_parser_util.dart';
 import 'package:ml_card_scanner/src/utils/logger.dart';
 import 'package:ml_card_scanner/src/widget/camera_overlay_widget.dart';
@@ -34,19 +33,20 @@ class ScannerWidget extends StatefulWidget {
   State<ScannerWidget> createState() => _ScannerWidgetState();
 }
 
-class _ScannerWidgetState extends State<ScannerWidget> {
+class _ScannerWidgetState extends State<ScannerWidget>
+    with WidgetsBindingObserver {
   final CardParserUtil _cardParser = CardParserUtil();
   final GlobalKey<CameraViewState> _cameraKey = GlobalKey();
 
   bool _isCameraInitialized = false;
   late CameraDescription _camera;
   late CameraController _cameraController;
-  late CameraLifecycle _cameraLifecycle;
   late ScannerWidgetController _scannerController;
 
   @override
   void initState() {
     if (mounted) {
+      WidgetsBinding.instance.addObserver(this);
       _scannerController = widget.controller ?? ScannerWidgetController();
       _scannerController.addListener(_scanParamsListener);
       _initialize();
@@ -59,11 +59,34 @@ class _ScannerWidgetState extends State<ScannerWidget> {
   }
 
   @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    try {
+      if (!_cameraController.value.isInitialized) {
+        return;
+      }
+      if (state == AppLifecycleState.inactive) {
+        _cameraController.dispose();
+      } else if (state == AppLifecycleState.resumed) {
+        setState(() {
+          _isCameraInitialized = false;
+        });
+        if (mounted) {
+          _initialize();
+        }
+      }
+    } catch (e) {
+      if (_scannerController.hasError) {
+        _scannerController.onError!(ScannerException(e.toString()));
+      }
+    }
+  }
+
+  @override
   void dispose() {
     if (mounted) {
+      WidgetsBinding.instance.removeObserver(this);
       _cameraKey.currentState?.stopCameraStream();
       _scannerController.removeListener(_scanParamsListener);
-      WidgetsBinding.instance?.removeObserver(_cameraLifecycle);
       _cameraController.dispose();
     }
     super.dispose();
@@ -102,7 +125,6 @@ class _ScannerWidgetState extends State<ScannerWidget> {
     try {
       var initializeResult = await _initializeCamera();
       if (initializeResult) {
-        _initLifecycle();
         setState(() {
           _isCameraInitialized = initializeResult;
         });
@@ -145,13 +167,6 @@ class _ScannerWidgetState extends State<ScannerWidget> {
         enableAudio: false);
     await _cameraController.initialize();
     return true;
-  }
-
-  void _initLifecycle() {
-    if (_scannerController.cameraPreviewEnabled) {
-      _cameraLifecycle = CameraLifecycle(cameraController: _cameraController);
-      WidgetsBinding.instance?.addObserver(_cameraLifecycle);
-    }
   }
 
   void _detect(InputImage image) async {

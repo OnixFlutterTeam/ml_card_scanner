@@ -1,3 +1,8 @@
+## 0.0.3
+
+* Update dependencies.
+* Fix disable/enable camera stream resume/pause
+
 ## 0.0.2
 
 * Update readme.md.
