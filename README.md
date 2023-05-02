@@ -1,6 +1,6 @@
 # ml_ card_scanner
 
-The ml_ card_scanner plugin allows you to scan bank cards.
+The ml_card_scanner plugin allows you to scan bank cards.
 ## Features
 
 

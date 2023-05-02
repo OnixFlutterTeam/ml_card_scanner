@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:ml_card_scanner/src/model/card_info.dart';
+import 'package:ml_card_scanner/src/model/scanner_exception.dart';
 
-import 'card_info.dart';
-import 'scanner_exception.dart';
 
 class ScanningParams {
   final bool scanningEnabled;
