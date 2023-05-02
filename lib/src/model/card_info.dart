@@ -9,6 +9,6 @@ class CardInfo {
 
   @override
   String toString() {
-    return 'CadrInfo\nnumber: $number\ntype: $type\nexpiry: $expiry';
+    return 'Card Info\nnumber: $number\ntype: $type\nexpiry: $expiry';
   }
 }

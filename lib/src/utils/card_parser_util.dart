@@ -29,20 +29,9 @@ class CardParserUtil {
       var expire = _getExpireDate(clearElements);
       return CardInfo(
           number: possibleCardNumber, type: cardType, expiry: expire);
-    } catch (e, _) {}
-
-    try {
-      var possibleCardNumbers = clearElements
-          .where((e) => (e.length == 4) && (int.tryParse(e) ?? -1) != -1);
-      if (possibleCardNumbers.length == 4) {
-        var cardNumber = possibleCardNumbers.join('');
-        var cardType = _getCardType(cardNumber);
-        var expire = _getExpireDate(clearElements);
-        return CardInfo(number: cardNumber, type: cardType, expiry: expire);
-      }
-    } catch (e, _) {}
-
-    return null;
+    } catch (e, _) {
+      return null;
+    }
   }
 
   String _getExpireDate(List<String> input) {
