@@ -1,24 +1,24 @@
 name: ml_card_scanner
 description: Package for scanning bank credit cards.
-version: 0.0.4
+version: 0.0.5
 homepage: https://github.com/OnixFlutterTeam/ml_card_scanner
 
 environment:
-  sdk: ">=2.19.0 <3.0.0"
+  sdk: ">=2.19.0 <4.0.0"
   flutter: ">=2.5.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  camera: ^0.10.4
-  google_mlkit_text_recognition: ^0.6.0
-  firebase_core: ^2.8.0
-  permission_handler: ^10.2.0
+  camera: ^0.10.5+2
+  google_mlkit_text_recognition: ^0.9.0
+  firebase_core: ^2.15.0
+  permission_handler: ^10.4.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.1
+  flutter_lints: ^2.0.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

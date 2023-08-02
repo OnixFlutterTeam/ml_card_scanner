@@ -49,6 +49,7 @@ class _MainScreenState extends State<MainScreen> {
             Expanded(
               child: ScannerWidget(
                 controller: _controller,
+                overlayOrientation: CardOrientation.landscape,
               ),
             ),
             Container(

@@ -1,6 +1,7 @@
+import 'dart:io';
 import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 class CameraWidget extends StatefulWidget {
@@ -9,12 +10,12 @@ class CameraWidget extends StatefulWidget {
   final int scannerDelay;
 
   const CameraWidget({
-    Key? key,
+    super.key,
     required this.cameraController,
     required this.cameraDescription,
     required this.onImage,
     required this.scannerDelay,
-  }) : super(key: key);
+  });
 
   final Function(InputImage inputImage) onImage;
 
@@ -23,6 +24,12 @@ class CameraWidget extends StatefulWidget {
 }
 
 class CameraViewState extends State<CameraWidget> {
+  final _orientations = {
+    DeviceOrientation.portraitUp: 0,
+    DeviceOrientation.landscapeLeft: 90,
+    DeviceOrientation.portraitDown: 180,
+    DeviceOrientation.landscapeRight: 270,
+  };
   int _lastFrameDecode = 0;
 
   Future<void> stopCameraStream() async {
@@ -65,42 +72,39 @@ class CameraViewState extends State<CameraWidget> {
       return;
     }
     _lastFrameDecode = DateTime.now().millisecondsSinceEpoch;
-    final WriteBuffer allBytes = WriteBuffer();
-    for (final Plane plane in image.planes) {
-      allBytes.putUint8List(plane.bytes);
+
+    final sensorOrientation = widget.cameraDescription.sensorOrientation;
+    InputImageRotation? rotation;
+    if (Platform.isIOS) {
+      rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
+    } else if (Platform.isAndroid) {
+      var rotationCompensation =
+          _orientations[widget.cameraController.value.deviceOrientation];
+      if (rotationCompensation == null) return null;
+      if (widget.cameraDescription.lensDirection == CameraLensDirection.front) {
+        rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
+      } else {
+        rotationCompensation =
+            (sensorOrientation - rotationCompensation + 360) % 360;
+      }
+      rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
     }
-    final bytes = allBytes.done().buffer.asUint8List();
 
-    final Size imageSize =
-        Size(image.width.toDouble(), image.height.toDouble());
+    if (rotation == null) return null;
 
-    final imageRotation = InputImageRotationValue.fromRawValue(
-            widget.cameraDescription.sensorOrientation) ??
-        InputImageRotation.rotation0deg;
+    final format = InputImageFormatValue.fromRawValue(image.format.raw);
 
-    final inputImageFormat =
-        InputImageFormatValue.fromRawValue(image.format.raw) ??
-            InputImageFormat.nv21;
-
-    final planeData = image.planes.map(
-      (Plane plane) {
-        return InputImagePlaneMetadata(
-          bytesPerRow: plane.bytesPerRow,
-          height: plane.height,
-          width: plane.width,
-        );
-      },
-    ).toList();
-
-    final inputImageData = InputImageData(
-      size: imageSize,
-      imageRotation: imageRotation,
-      inputImageFormat: inputImageFormat,
-      planeData: planeData,
+    if (image.planes.isEmpty) return null;
+    final plane = image.planes.first;
+    final inputImage = InputImage.fromBytes(
+      bytes: image.planes.first.bytes,
+      metadata: InputImageMetadata(
+        size: Size(image.width.toDouble(), image.height.toDouble()),
+        rotation: rotation,
+        format: format ?? InputImageFormat.yuv420,
+        bytesPerRow: plane.bytesPerRow,
+      ),
     );
-
-    final inputImage =
-        InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
 
     widget.onImage(inputImage);
   }

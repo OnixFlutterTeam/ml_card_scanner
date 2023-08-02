@@ -7,11 +7,11 @@ class CameraOverlayWidget extends StatelessWidget {
   final Color overlayColorFilter;
 
   const CameraOverlayWidget({
-    Key? key,
+    super.key,
     required this.cardOrientation,
     required this.overlayBorderRadius,
     required this.overlayColorFilter,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
