@@ -6,7 +6,7 @@ description: Demonstrates how to use the ml_card_scanner plugin.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 environment:
-  sdk: ">=2.16.2 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -18,7 +18,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  firebase_core: ^2.8.0
+  firebase_core: ^2.15.0
   ml_card_scanner:
     # When depending on this package from a real application you should use:
     #   ml_card_scanner: ^x.y.z

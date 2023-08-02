@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,14 +21,14 @@ class ScannerWidget extends StatefulWidget {
   final ScannerWidgetController? controller;
 
   const ScannerWidget({
-    Key? key,
+    super.key,
     this.overlay,
     this.overlayText,
     this.controller,
     this.scannerDelay = 400,
     this.oneShotScanning = true,
     this.overlayOrientation = CardOrientation.portrait,
-  }) : super(key: key);
+  });
 
   @override
   State<ScannerWidget> createState() => _ScannerWidgetState();
@@ -64,19 +66,12 @@ class _ScannerWidgetState extends State<ScannerWidget>
         return;
       }
       if (state == AppLifecycleState.inactive) {
-        _cameraController.dispose();
+        _cameraKey.currentState?.stopCameraStream();
       } else if (state == AppLifecycleState.resumed) {
-        setState(() {
-          _isCameraInitialized = false;
-        });
-        if (mounted) {
-          _initialize();
-        }
+        _cameraKey.currentState?.startCameraStream();
       }
     } catch (e) {
-      if (_scannerController.hasError) {
-        _scannerController.onError!(ScannerException(e.toString()));
-      }
+      _handleError(ScannerException(e.toString()));
     }
   }
 
@@ -129,41 +124,37 @@ class _ScannerWidgetState extends State<ScannerWidget>
         });
       }
     } catch (e) {
-      if (_scannerController.hasError) {
-        _scannerController.onError!(ScannerException(e.toString()));
-      }
+      _handleError(ScannerException(e.toString()));
     }
   }
 
   Future<bool> _initializeCamera() async {
     var status = await Permission.camera.request();
     if (!status.isGranted) {
-      if (_scannerController.hasError) {
-        _scannerController
-            .onError!(ScannerException('Camera permission not granted.'));
-      }
+      _handleError(ScannerException('Camera permission not granted.'));
       return false;
     }
 
     final cameras = await availableCameras();
     if (cameras.isEmpty) {
-      if (_scannerController.hasError) {
-        _scannerController.onError!(ScannerException('No cameras available.'));
-      }
+      _handleError(ScannerException('No cameras available.'));
       return false;
     }
     if ((cameras.where((cam) => cam.lensDirection == CameraLensDirection.back))
         .isEmpty) {
-      if (_scannerController.hasError) {
-        _scannerController
-            .onError!(ScannerException('No back camera available.'));
-      }
+      _handleError(ScannerException('No back camera available.'));
       return false;
     }
     _camera = cameras
         .firstWhere((cam) => cam.lensDirection == CameraLensDirection.back);
-    _cameraController = CameraController(_camera, ResolutionPreset.veryHigh,
-        enableAudio: false);
+    _cameraController = CameraController(
+      _camera,
+      ResolutionPreset.veryHigh,
+      enableAudio: false,
+      imageFormatGroup: Platform.isAndroid
+          ? ImageFormatGroup.nv21
+          : ImageFormatGroup.bgra8888,
+    );
     await _cameraController.initialize();
     return true;
   }
@@ -171,13 +162,12 @@ class _ScannerWidgetState extends State<ScannerWidget>
   void _detect(InputImage image) async {
     var resultCard = await _cardParser.detectCardContent(image);
     Logger.log('Detect Card Details', resultCard.toString());
-    if (_scannerController.hasCardListener) {
-      if (resultCard != null) {
-        if (widget.oneShotScanning) {
-          _scannerController.disableScanning();
-        }
-        _scannerController.onCardScanned!(resultCard);
+
+    if (resultCard != null) {
+      if (widget.oneShotScanning) {
+        _scannerController.disableScanning();
       }
+      _handleData(resultCard);
     }
   }
 
@@ -191,6 +181,20 @@ class _ScannerWidgetState extends State<ScannerWidget>
       _cameraController.resumePreview();
     } else {
       _cameraController.pausePreview();
+    }
+  }
+
+  void _handleData(CardInfo cardInfo) {
+    final cardScannedCallback = _scannerController.onCardScanned;
+    if (cardScannedCallback != null) {
+      cardScannedCallback(cardInfo);
+    }
+  }
+
+  void _handleError(ScannerException exception) {
+    final errorCallback = _scannerController.onError;
+    if (errorCallback != null) {
+      errorCallback(exception);
     }
   }
 }

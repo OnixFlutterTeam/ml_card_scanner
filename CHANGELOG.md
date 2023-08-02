@@ -1,3 +1,10 @@
+## 0.0.5
+
+* Dart 3 update;
+* Packages update;
+* Updated camera implementation;
+* Minor improvements;
+
 ## 0.0.4
 
 * Update dependencies.

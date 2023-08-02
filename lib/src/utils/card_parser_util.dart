@@ -23,8 +23,11 @@ class CardParserUtil {
         .toList();
 
     try {
-      var possibleCardNumber = clearElements.firstWhere((e) =>
-          (e.length == _cardNumberLength) && (int.tryParse(e) ?? -1) != -1);
+      var possibleCardNumber = clearElements.firstWhere((input) {
+        final cleanValue = input.fixPossibleMisspells();
+        return (cleanValue.length == _cardNumberLength) &&
+            (int.tryParse(cleanValue) ?? -1) != -1;
+      });
       var cardType = _getCardType(possibleCardNumber);
       var expire = _getExpireDate(clearElements);
       return CardInfo(
@@ -36,8 +39,10 @@ class CardParserUtil {
 
   String _getExpireDate(List<String> input) {
     try {
-      return input
-          .firstWhere((element) => RegExp(_expiryDateRegEx).hasMatch(element));
+      return input.firstWhere((input) {
+        final cleanValue = input.fixPossibleMisspells();
+        return RegExp(_expiryDateRegEx).hasMatch(cleanValue);
+      });
     } catch (e, _) {
       return '';
     }

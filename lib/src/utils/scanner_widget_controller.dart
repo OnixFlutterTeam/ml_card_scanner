@@ -11,11 +11,7 @@ class ScannerWidgetController extends ValueNotifier<ScanningParams> {
 
   bool get cameraPreviewEnabled => value.cameraPreviewEnabled;
 
-  bool get hasCardListener => value.onCardScanned != null;
-
   ValueChanged<CardInfo>? get onCardScanned => value.onCardScanned;
-
-  bool get hasError => value.onError != null;
 
   ValueChanged<ScannerException>? get onError => value.onError;
 
@@ -76,4 +72,5 @@ class ScannerWidgetController extends ValueNotifier<ScanningParams> {
     value = value.copyWith(onError: null);
     notifyListeners();
   }
+
 }
