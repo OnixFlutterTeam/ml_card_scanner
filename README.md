@@ -3,12 +3,18 @@
 The ml_card_scanner plugin allows you to scan bank cards.
 ## Features
 
-
 - Can scan expiration date, card type and card number 
 - Work with horizontal and vertical cards
 - Powered by Google's Machine Learning models
 - Great performance and accuracy
 - Fully offline scan makes it a completely secure scanner.
+
+```
+Warning: This package does not guarantee 100% 
+accurate scanning of card details, 
+so always give users the opportunity 
+to check and modify the data before using it.
+```		
 
 ## Prepare
 

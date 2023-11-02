@@ -4,14 +4,14 @@ import 'package:ml_card_scanner/ml_card_scanner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-/*  await Firebase.initializeApp(
+ /* await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );*/
   runApp(const MaterialApp(home: MainScreen()));
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({Key? key}) : super(key: key);
+  const MainScreen({super.key});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
