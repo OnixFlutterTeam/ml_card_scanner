@@ -10,7 +10,8 @@ class CardParserUtil {
   final String _cardUnknown = 'Unknown';
   final String _cardVisaParam = '4';
   final String _cardMasterCardParam = '5';
-  final _expiryDateRegEx = r'/^(0[1-9]|1[0-2])\/?([0-9]{4}|[0-9]{2})$/;';
+
+  /*final _expiryDateRegEx = r'/^(0[1-9]|1[0-2])\/?([0-9]{4}|[0-9]{2})$/;';*/
   final _textDetector = TextRecognizer(script: TextRecognitionScript.latin);
 
   Future<CardInfo?> detectCardContent(InputImage inputImage) async {
@@ -42,8 +43,6 @@ class CardParserUtil {
       final possibleDate = input.firstWhere((input) {
         final cleanValue = input.fixPossibleMisspells();
         if (cleanValue.length == 4) {
-          final m = cleanValue.substring(0, 2);
-          final y = cleanValue.substring(2, 4);
           return true;
         }
         return false;
