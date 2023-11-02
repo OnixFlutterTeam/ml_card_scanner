@@ -1,3 +1,9 @@
+## 0.0.6
+
+* Fixed related to Expire Date parsing
+* Packages update;
+* Minor improvements;
+
 ## 0.0.5
 
 * Dart 3 update;

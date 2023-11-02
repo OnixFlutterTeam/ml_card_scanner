@@ -149,7 +149,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
         .firstWhere((cam) => cam.lensDirection == CameraLensDirection.back);
     _cameraController = CameraController(
       _camera,
-      ResolutionPreset.veryHigh,
+      ResolutionPreset.max,
       enableAudio: false,
       imageFormatGroup: Platform.isAndroid
           ? ImageFormatGroup.nv21

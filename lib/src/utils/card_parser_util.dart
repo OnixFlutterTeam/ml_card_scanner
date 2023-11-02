@@ -39,10 +39,16 @@ class CardParserUtil {
 
   String _getExpireDate(List<String> input) {
     try {
-      return input.firstWhere((input) {
+      final possibleDate = input.firstWhere((input) {
         final cleanValue = input.fixPossibleMisspells();
-        return RegExp(_expiryDateRegEx).hasMatch(cleanValue);
+        if (cleanValue.length == 4) {
+          final m = cleanValue.substring(0, 2);
+          final y = cleanValue.substring(2, 4);
+          return true;
+        }
+        return false;
       });
+      return possibleDate.fixPossibleMisspells().possibleDateFormatted();
     } catch (e, _) {
       return '';
     }

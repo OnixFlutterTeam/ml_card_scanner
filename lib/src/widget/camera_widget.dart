@@ -10,11 +10,11 @@ class CameraWidget extends StatefulWidget {
   final int scannerDelay;
 
   const CameraWidget({
-    super.key,
     required this.cameraController,
     required this.cameraDescription,
     required this.onImage,
     required this.scannerDelay,
+    super.key,
   });
 
   final Function(InputImage inputImage) onImage;
@@ -59,7 +59,7 @@ class CameraViewState extends State<CameraWidget> {
       scale: 1 / mediaSize.aspectRatio,
       child: Center(
         child: AspectRatio(
-          aspectRatio: mediaSize.width / mediaSize.height,
+          aspectRatio: mediaSize.aspectRatio,
           child: CameraPreview(widget.cameraController),
         ),
       ),
