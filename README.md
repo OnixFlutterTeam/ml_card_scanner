@@ -108,6 +108,7 @@ Also `ScannerWidget` have another parameter you can specify:
  - `scannerDelay` - set the scan delay or not set to use the default 400 (interval between card scannings in millisecconds);
  - `oneShotScanning` - set to `false` -  the scan will run continuously, `true` -scaninng will stop after card detected;
  - `overlayOrientation` - set the default overlay orientation, by default `portrait`;
+ - `cameraResolution` - resolution preset for camera, by default `high`;
  - `controller` - `ScannerWidgetController` widget controller to get scanned card details or error;
 
 For `ScannerWidgetController` have functionality:
