@@ -18,6 +18,8 @@ class ScannerWidget extends StatefulWidget {
   final Widget? overlayText;
   final int scannerDelay;
   final bool oneShotScanning;
+
+  final CameraResolution cameraResolution;
   final ScannerWidgetController? controller;
 
   const ScannerWidget({
@@ -28,6 +30,7 @@ class ScannerWidget extends StatefulWidget {
     this.scannerDelay = 400,
     this.oneShotScanning = true,
     this.overlayOrientation = CardOrientation.portrait,
+    this.cameraResolution = CameraResolution.high,
   });
 
   @override
@@ -149,7 +152,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
         .firstWhere((cam) => cam.lensDirection == CameraLensDirection.back);
     _cameraController = CameraController(
       _camera,
-      ResolutionPreset.max,
+      _getResolutionPreset(),
       enableAudio: false,
       imageFormatGroup: Platform.isAndroid
           ? ImageFormatGroup.nv21
@@ -157,6 +160,17 @@ class _ScannerWidgetState extends State<ScannerWidget>
     );
     await _cameraController.initialize();
     return true;
+  }
+
+  ResolutionPreset _getResolutionPreset() {
+    switch (widget.cameraResolution) {
+      case CameraResolution.max:
+        return ResolutionPreset.max;
+      case CameraResolution.high:
+        return ResolutionPreset.veryHigh;
+      case CameraResolution.ultra:
+        return ResolutionPreset.ultraHigh;
+    }
   }
 
   void _detect(InputImage image) async {

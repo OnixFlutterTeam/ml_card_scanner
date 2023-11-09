@@ -1,6 +1,10 @@
+## 0.0.7
+
+* Added option to select camera resolution preset;
+
 ## 0.0.6
 
-* Fixed related to Expire Date parsing
+* Fixed related to Expire Date parsing;
 * Packages update;
 * Minor improvements;
 
