@@ -9,14 +9,14 @@ class ScanningParams {
   final ValueChanged<CardInfo>? onCardScanned;
   final ValueChanged<ScannerException>? onError;
 
-  ScanningParams({
+  const ScanningParams({
     required this.scanningEnabled,
     required this.cameraPreviewEnabled,
     required this.onCardScanned,
     required this.onError,
   });
 
-  factory ScanningParams.defaultParams() => ScanningParams(
+  factory ScanningParams.defaultParams() => const ScanningParams(
         scanningEnabled: true,
         cameraPreviewEnabled: true,
         onCardScanned: null,
