@@ -46,8 +46,8 @@ class _ScannerWidgetState extends State<ScannerWidget>
   final ValueNotifier<bool> _isCameraInitialized = ValueNotifier(false);
 
   late CameraDescription _camera;
-  late CameraController _cameraController;
   late ScannerWidgetController _scannerController;
+  CameraController? _cameraController;
 
   @override
   void initState() {
@@ -67,9 +67,10 @@ class _ScannerWidgetState extends State<ScannerWidget>
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     try {
-      if (!_cameraController.value.isInitialized) {
+      if (!(_cameraController?.value.isInitialized ?? false)) {
         return;
       }
+
       if (state == AppLifecycleState.inactive) {
         _cameraKey.currentState?.stopCameraStream();
       } else if (state == AppLifecycleState.resumed) {
@@ -86,7 +87,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
       WidgetsBinding.instance.removeObserver(this);
       _cameraKey.currentState?.stopCameraStream();
       _scannerController.removeListener(_scanParamsListener);
-      _cameraController.dispose();
+      _cameraController?.dispose();
     }
     super.dispose();
   }
@@ -98,10 +99,14 @@ class _ScannerWidgetState extends State<ScannerWidget>
         ValueListenableBuilder<bool>(
           valueListenable: _isCameraInitialized,
           builder: (context, cameraInitialized, _) {
+            final controller = _cameraController;
+
+            if (controller == null) return const SizedBox.shrink();
+
             if (cameraInitialized) {
               return CameraWidget(
                 key: _cameraKey,
-                cameraController: _cameraController,
+                cameraController: controller,
                 cameraDescription: _camera,
                 onImage: _detect,
                 scannerDelay: widget.scannerDelay,
@@ -167,7 +172,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
           ? ImageFormatGroup.nv21
           : ImageFormatGroup.bgra8888,
     );
-    await _cameraController.initialize();
+    await _cameraController?.initialize();
     return true;
   }
 
@@ -201,9 +206,9 @@ class _ScannerWidgetState extends State<ScannerWidget>
       _cameraKey.currentState?.stopCameraStream();
     }
     if (_scannerController.cameraPreviewEnabled) {
-      _cameraController.resumePreview();
+      _cameraController?.resumePreview();
     } else {
-      _cameraController.pausePreview();
+      _cameraController?.pausePreview();
     }
   }
 

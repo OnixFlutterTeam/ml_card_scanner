@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:ml_card_scanner/ml_card_scanner.dart';
-
 import 'package:ml_card_scanner/src/model/scanning_params.dart';
 
 class ScannerWidgetController extends ValueNotifier<ScanningParams> {
