@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ml_card_scanner/src/model/card_info.dart';
-import 'package:ml_card_scanner/src/model/scanner_exception.dart';
+import 'package:ml_card_scanner/src/model/exceptions/scanner_exception.dart';
 
 
 class ScanningParams {
@@ -9,14 +9,14 @@ class ScanningParams {
   final ValueChanged<CardInfo>? onCardScanned;
   final ValueChanged<ScannerException>? onError;
 
-  ScanningParams({
+  const ScanningParams({
     required this.scanningEnabled,
     required this.cameraPreviewEnabled,
     required this.onCardScanned,
     required this.onError,
   });
 
-  factory ScanningParams.defaultParams() => ScanningParams(
+  factory ScanningParams.defaultParams() => const ScanningParams(
         scanningEnabled: true,
         cameraPreviewEnabled: true,
         onCardScanned: null,

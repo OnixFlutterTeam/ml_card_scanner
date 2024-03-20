@@ -3,7 +3,11 @@ class CardInfo {
   final String type;
   final String expiry;
 
-  CardInfo({required this.number, required this.type, required this.expiry});
+  const CardInfo({
+    required this.number,
+    required this.type,
+    required this.expiry,
+  });
 
   bool isValid() => number.isNotEmpty && number.length == 16;
 

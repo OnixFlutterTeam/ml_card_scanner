@@ -103,13 +103,16 @@ ScannerWidget(controller: _controller)
 
 Also `ScannerWidget` have another parameter you can specify:
 
- - `overlay` - set your overlay widget or specify null to use the default;
- - `overlayText` - set your text widget or specify null to use the default;
+ - `overlayBuilder` - set your overlay widget or specify null to use the default;
+ - `overlayTextBuilder` - set your widget or specify null to use the default;
+ - `cameraPreviewBuilder` - set your widget constraints for CameraPreview or specify null to use the default;
  - `scannerDelay` - set the scan delay or not set to use the default 400 (interval between card scannings in millisecconds);
  - `oneShotScanning` - set to `false` -  the scan will run continuously, `true` -scaninng will stop after card detected;
  - `overlayOrientation` - set the default overlay orientation, by default `portrait`;
  - `cameraResolution` - resolution preset for camera, by default `high`;
  - `controller` - `ScannerWidgetController` widget controller to get scanned card details or error;
+
+See `example/lib/ml_card_scanner.dart` for implementation.
 
 For `ScannerWidgetController` have functionality:
 
@@ -126,6 +129,3 @@ Number card: 5173949390587465
 Type: Master Card
 Expiry: 10/24
 ```
- 
-
-

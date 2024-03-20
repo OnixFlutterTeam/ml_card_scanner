@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ml_card_scanner/ml_card_scanner.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   /*await Firebase.initializeApp(
@@ -19,23 +18,15 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  CardInfo? _cardInfo;
   final ScannerWidgetController _controller = ScannerWidgetController();
+  final ValueNotifier<CardInfo?> _cardInfo = ValueNotifier(null);
 
   @override
   void initState() {
-    _controller
-      ..setCardListener((value) {
-        setState(() {
-          _cardInfo = value;
-        });
-      })
-      ..setErrorListener((exception) {
-        if (kDebugMode) {
-          print('Error: ${exception.message}');
-        }
-      });
     super.initState();
+    _controller
+      ..setCardListener(_onListenCard)
+      ..setErrorListener(_onError);
   }
 
   @override
@@ -55,22 +46,47 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
             Container(
-                width: MediaQuery.of(context).size.width,
-                color: Colors.white,
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Text(_cardInfo?.toString() ?? 'No Card Details'),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                  ],
-                )),
+              width: MediaQuery.sizeOf(context).width,
+              color: Colors.white,
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  ValueListenableBuilder<CardInfo?>(
+                    valueListenable: _cardInfo,
+                    builder: (context, card, child) {
+                      return Text(card?.toString() ?? 'No Card Details');
+                    },
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controller
+      ..removeCardListeners(_onListenCard)
+      ..removeErrorListener(_onError)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onListenCard(CardInfo? value) {
+    _cardInfo.value = value;
+  }
+
+  void _onError(ScannerException exception) {
+    if (kDebugMode) {
+      print('Error: ${exception.message}');
+    }
   }
 }

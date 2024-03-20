@@ -1,3 +1,11 @@
+## 0.1.0
+
+* Added overlayTextBuilder field instead of overlayText for more flexible UI customization.
+* Added overlayBuilder field instead of overlay for more flexible UI customization.
+* Added cameraPreviewBuilder field for flexible customization of CameraPreview constraints.
+* Fixed incorrect display of default overlay
+* Updated dependencies
+
 ## 0.0.7
 
 * Added option to select camera resolution preset;
