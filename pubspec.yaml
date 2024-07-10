@@ -1,6 +1,6 @@
 name: ml_card_scanner
 description: Package for scanning bank credit cards.
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/OnixFlutterTeam/ml_card_scanner
 
 environment:
