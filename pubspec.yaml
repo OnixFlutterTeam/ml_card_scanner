@@ -10,15 +10,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  camera: ^0.10.5+9
-  google_mlkit_text_recognition: ^0.11.0
-  firebase_core: ^2.25.5
-  permission_handler: ^11.3.0
+  camera: ^0.11.0+1
+  google_mlkit_text_recognition: ^0.13.0
+  firebase_core: ^3.2.0
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  flutter_lints: 4.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
