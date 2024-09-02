@@ -1,3 +1,8 @@
+## 0.1.1
+
+* Updated dependency versions
+* Migrated example project from imperative Flutter's Gradle plugins to declarative
+
 ## 0.1.0
 
 * Added overlayTextBuilder field instead of overlayText for more flexible UI customization.
