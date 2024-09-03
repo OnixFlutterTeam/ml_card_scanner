@@ -62,10 +62,10 @@ class CameraViewState extends State<CameraWidget> {
 
     if (widget.cameraPreviewBuilder != null) {
       return widget.cameraPreviewBuilder?.call(
-        context,
-        CameraPreviewWrapper(cameraController: widget.cameraController),
-        widget.cameraController.value.previewSize,
-      ) ??
+            context,
+            CameraPreviewWrapper(cameraController: widget.cameraController),
+            widget.cameraController.value.previewSize,
+          ) ??
           const SizedBox.shrink();
     }
 
@@ -93,7 +93,7 @@ class CameraViewState extends State<CameraWidget> {
       rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
     } else if (Platform.isAndroid) {
       var rotationCompensation =
-      _orientations[widget.cameraController.value.deviceOrientation];
+          _orientations[widget.cameraController.value.deviceOrientation];
       if (rotationCompensation == null) return null;
       if (widget.cameraDescription.lensDirection == CameraLensDirection.front) {
         rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
@@ -111,7 +111,12 @@ class CameraViewState extends State<CameraWidget> {
     if (image.planes.isEmpty) return null;
     final plane = image.planes.first;
     final inputImage = InputImage.fromBytes(
-      bytes: image.planes.first.bytes,
+      bytes: Uint8List.fromList(
+        image.planes.fold(
+            <int>[],
+            (List<int> previousValue, element) =>
+                previousValue..addAll(element.bytes)),
+      ),
       metadata: InputImageMetadata(
         size: Size(image.width.toDouble(), image.height.toDouble()),
         rotation: rotation,
