@@ -16,4 +16,15 @@ extension StringExtension on String {
     final y = substring(2, 4);
     return '$m/$y';
   }
+
+  int getDateMonthNumber() {
+    final m = substring(0, 2);
+    return int.tryParse(m) ?? -1;
+  }
+
+  int getDateYearNumber() {
+    final y = substring(2, 4);
+    return int.tryParse(y) ?? -1;
+  }
+
 }

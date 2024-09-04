@@ -1,7 +1,9 @@
 import 'dart:core';
 
+import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:ml_card_scanner/src/model/card_info.dart';
+import 'package:ml_card_scanner/src/utils/int_extension.dart';
 import 'package:ml_card_scanner/src/utils/string_extension.dart';
 
 class CardParserUtil {
@@ -40,7 +42,11 @@ class CardParserUtil {
       final possibleDate = input.firstWhere((input) {
         final cleanValue = input.fixPossibleMisspells();
         if (cleanValue.length == 4) {
-          return true;
+          final m = cleanValue.getDateMonthNumber();
+          final y = cleanValue.getDateYearNumber();
+          if (m.validateDateMonth() && y.validateDateYear()) {
+            return true;
+          }
         }
         return false;
       });
