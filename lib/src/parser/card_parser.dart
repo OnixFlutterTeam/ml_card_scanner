@@ -1,4 +1,3 @@
-import 'package:characters/characters.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:ml_card_scanner/src/model/card_info.dart';
