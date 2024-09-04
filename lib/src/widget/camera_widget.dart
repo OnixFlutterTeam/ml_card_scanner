@@ -12,7 +12,7 @@ class CameraWidget extends StatefulWidget {
   final CameraDescription cameraDescription;
   final int scannerDelay;
   final CameraPreviewBuilder? cameraPreviewBuilder;
-  final void Function(InputImage inputImage) onImage;
+  final InputImageCallback onImage;
 
   const CameraWidget({
     required this.cameraController,
