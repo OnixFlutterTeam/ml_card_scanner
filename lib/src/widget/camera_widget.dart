@@ -80,7 +80,7 @@ class CameraViewState extends State<CameraWidget> {
     );
   }
 
-  Future _processCameraImage(CameraImage image) async {
+  Future<void> _processCameraImage(CameraImage image) async {
     if ((DateTime.now().millisecondsSinceEpoch - _lastFrameDecode) <
         widget.scannerDelay) {
       return;
@@ -94,7 +94,7 @@ class CameraViewState extends State<CameraWidget> {
     } else if (Platform.isAndroid) {
       var rotationCompensation =
           _orientations[widget.cameraController.value.deviceOrientation];
-      if (rotationCompensation == null) return null;
+      if (rotationCompensation == null) return;
       if (widget.cameraDescription.lensDirection == CameraLensDirection.front) {
         rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
       } else {
@@ -104,11 +104,11 @@ class CameraViewState extends State<CameraWidget> {
       rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
     }
 
-    if (rotation == null) return null;
+    if (rotation == null) return;
 
     final format = InputImageFormatValue.fromRawValue(image.format.raw);
 
-    if (image.planes.isEmpty) return null;
+    if (image.planes.isEmpty) return;
     final plane = image.planes.first;
     final inputImage = InputImage.fromBytes(
       bytes: Uint8List.fromList(
