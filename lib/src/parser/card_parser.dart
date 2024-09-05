@@ -40,10 +40,9 @@ class CardParser {
     } catch (e, _) {
       cardOption = null;
     }
-    if (cardOption == null) {
-      return null;
+    if (cardOption != null) {
+      _recognizedVariants.add(cardOption);
     }
-    _recognizedVariants.add(cardOption);
 
     if (_recognizedVariants.length == cardScanTries) {
       final cardNumber = _recognizedVariants.getCardNumber();
@@ -57,6 +56,7 @@ class CardParser {
         expiry: cardDate.possibleDateFormatted(),
       );
     }
+    return null;
   }
 
   String _getExpireDate(List<String> input) {

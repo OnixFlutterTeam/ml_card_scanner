@@ -16,6 +16,7 @@ class CameraWidget extends StatefulWidget {
   final CameraPreviewBuilder? cameraPreviewBuilder;
   final CardInfoCallback onCard;
   final ScannerWorker? worker;
+  final ScannerWidgetController scannerController;
 
   const CameraWidget({
     required this.cameraController,
@@ -23,6 +24,7 @@ class CameraWidget extends StatefulWidget {
     required this.onCard,
     required this.scannerDelay,
     required this.worker,
+    required this.scannerController,
     this.cameraPreviewBuilder,
     super.key,
   });
@@ -79,6 +81,8 @@ class CameraViewState extends State<CameraWidget> {
   }
 
   Future<void> _processCameraImage(CameraImage image) async {
+    if (!widget.scannerController.scanningEnabled) return;
+
     if ((DateTime.now().millisecondsSinceEpoch - _lastFrameDecode) <
         widget.scannerDelay) {
       return;
@@ -109,9 +113,7 @@ class CameraViewState extends State<CameraWidget> {
         format,
         plane.bytesPerRow,
       );
-      widget.onCard(
-        result != null ? CardInfo.fromJson(result) : null,
-      );
+      widget.onCard(result != null ? CardInfo.fromJson(result) : null);
     } catch (_) {
       widget.onCard(null);
     }

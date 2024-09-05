@@ -101,6 +101,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
                 scannerDelay: widget.scannerDelay,
                 cameraPreviewBuilder: widget.cameraPreviewBuilder,
                 worker: _worker,
+                scannerController: _scannerController,
               );
             }
 
