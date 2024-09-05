@@ -1,10 +1,12 @@
-import 'dart:io';
+import 'dart:async';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:ml_card_scanner/ml_card_scanner.dart';
 import 'package:ml_card_scanner/src/model/typedefs.dart';
+import 'package:ml_card_scanner/src/utils/camera_image_util.dart';
+import 'package:ml_card_scanner/src/utils/scanner_worker.dart';
 import 'package:ml_card_scanner/src/widget/camera_preview_wrapper.dart';
 
 class CameraWidget extends StatefulWidget {
@@ -12,13 +14,15 @@ class CameraWidget extends StatefulWidget {
   final CameraDescription cameraDescription;
   final int scannerDelay;
   final CameraPreviewBuilder? cameraPreviewBuilder;
-  final InputImageCallback onImage;
+  final CardInfoCallback onCard;
+  final ScannerWorker? worker;
 
   const CameraWidget({
     required this.cameraController,
     required this.cameraDescription,
-    required this.onImage,
+    required this.onCard,
     required this.scannerDelay,
+    required this.worker,
     this.cameraPreviewBuilder,
     super.key,
   });
@@ -28,12 +32,6 @@ class CameraWidget extends StatefulWidget {
 }
 
 class CameraViewState extends State<CameraWidget> {
-  final _orientations = {
-    DeviceOrientation.portraitUp: 0,
-    DeviceOrientation.landscapeLeft: 90,
-    DeviceOrientation.portraitDown: 180,
-    DeviceOrientation.landscapeRight: 270,
-  };
   int _lastFrameDecode = 0;
 
   Future<void> stopCameraStream() async {
@@ -85,46 +83,37 @@ class CameraViewState extends State<CameraWidget> {
         widget.scannerDelay) {
       return;
     }
+
     _lastFrameDecode = DateTime.now().millisecondsSinceEpoch;
 
-    final sensorOrientation = widget.cameraDescription.sensorOrientation;
-    InputImageRotation? rotation;
-    if (Platform.isIOS) {
-      rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
-    } else if (Platform.isAndroid) {
-      var rotationCompensation =
-          _orientations[widget.cameraController.value.deviceOrientation];
-      if (rotationCompensation == null) return;
-      if (widget.cameraDescription.lensDirection == CameraLensDirection.front) {
-        rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
-      } else {
-        rotationCompensation =
-            (sensorOrientation - rotationCompensation + 360) % 360;
-      }
-      rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
+    try {
+      final sensorOrientation = widget.cameraDescription.sensorOrientation;
+      final rotation = CameraImageUtil.getImageRotation(
+        sensorOrientation,
+        widget.cameraController.value.deviceOrientation,
+        widget.cameraDescription.lensDirection,
+      );
+
+      if (rotation == null) return;
+      final format = InputImageFormatValue.fromRawValue(image.format.raw);
+
+      if (image.planes.isEmpty) return;
+
+      final plane = image.planes.first;
+      final bytes = image.planes.map((e) => e.bytes).toList();
+      final result = await widget.worker?.processImage(
+        bytes,
+        image.width,
+        image.height,
+        rotation,
+        format,
+        plane.bytesPerRow,
+      );
+      widget.onCard(
+        result != null ? CardInfo.fromJson(result) : null,
+      );
+    } catch (_) {
+      widget.onCard(null);
     }
-
-    if (rotation == null) return;
-
-    final format = InputImageFormatValue.fromRawValue(image.format.raw);
-
-    if (image.planes.isEmpty) return;
-    final plane = image.planes.first;
-    final inputImage = InputImage.fromBytes(
-      bytes: Uint8List.fromList(
-        image.planes.fold(
-            <int>[],
-            (List<int> previousValue, element) =>
-                previousValue..addAll(element.bytes)),
-      ),
-      metadata: InputImageMetadata(
-        size: Size(image.width.toDouble(), image.height.toDouble()),
-        rotation: rotation,
-        format: format ?? InputImageFormat.yuv420,
-        bytesPerRow: plane.bytesPerRow,
-      ),
-    );
-
-    widget.onImage(inputImage);
   }
 }

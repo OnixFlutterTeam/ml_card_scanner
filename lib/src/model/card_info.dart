@@ -9,6 +9,18 @@ class CardInfo {
     required this.expiry,
   });
 
+  factory CardInfo.fromJson(Map<String, dynamic> json) => CardInfo(
+        number: json['number'],
+        type: json['type'],
+        expiry: json['expiry'],
+      );
+
+  Map<String, dynamic> toJson() => {
+        'number': number,
+        'type': type,
+        'expiry': expiry,
+      };
+
   bool isValid() => number.isNotEmpty && number.length == 16;
 
   @override

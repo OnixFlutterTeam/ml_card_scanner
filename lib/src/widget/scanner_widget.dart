@@ -3,11 +3,10 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:ml_card_scanner/ml_card_scanner.dart';
 import 'package:ml_card_scanner/src/model/typedefs.dart';
-import 'package:ml_card_scanner/src/parser/card_parser.dart';
 import 'package:ml_card_scanner/src/utils/logger.dart';
+import 'package:ml_card_scanner/src/utils/scanner_worker.dart';
 import 'package:ml_card_scanner/src/widget/camera_overlay_widget.dart';
 import 'package:ml_card_scanner/src/widget/camera_widget.dart';
 import 'package:ml_card_scanner/src/widget/text_overlay_widget.dart';
@@ -43,22 +42,17 @@ class ScannerWidget extends StatefulWidget {
 
 class _ScannerWidgetState extends State<ScannerWidget>
     with WidgetsBindingObserver {
-  late CardParser _cardParser;
-
   final GlobalKey<CameraViewState> _cameraKey = GlobalKey();
-  final ValueNotifier<bool> _isCameraInitialized = ValueNotifier(false);
-
+  final ValueNotifier<bool> _isInitialized = ValueNotifier(false);
   late CameraDescription _camera;
   late ScannerWidgetController _scannerController;
+  ScannerWorker? _worker;
   CameraController? _cameraController;
 
   @override
   void initState() {
     super.initState();
     if (mounted) {
-      _cardParser = CardParser(
-        cardScanTries: widget.cardScanTries,
-      );
       WidgetsBinding.instance.addObserver(this);
       _scannerController = widget.controller ?? ScannerWidgetController();
       _scannerController.addListener(_scanParamsListener);
@@ -88,35 +82,25 @@ class _ScannerWidgetState extends State<ScannerWidget>
   }
 
   @override
-  void dispose() {
-    if (mounted) {
-      WidgetsBinding.instance.removeObserver(this);
-      _cameraKey.currentState?.stopCameraStream();
-      _scannerController.removeListener(_scanParamsListener);
-      _cameraController?.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Stack(
       children: <Widget>[
         ValueListenableBuilder<bool>(
-          valueListenable: _isCameraInitialized,
-          builder: (context, cameraInitialized, _) {
+          valueListenable: _isInitialized,
+          builder: (context, isInitialized, _) {
             final controller = _cameraController;
 
             if (controller == null) return const SizedBox.shrink();
 
-            if (cameraInitialized) {
+            if (isInitialized) {
               return CameraWidget(
                 key: _cameraKey,
                 cameraController: controller,
                 cameraDescription: _camera,
-                onImage: _detect,
+                onCard: _handle,
                 scannerDelay: widget.scannerDelay,
                 cameraPreviewBuilder: widget.cameraPreviewBuilder,
+                worker: _worker,
               );
             }
 
@@ -140,11 +124,25 @@ class _ScannerWidgetState extends State<ScannerWidget>
     );
   }
 
+  @override
+  void dispose() {
+    if (mounted) {
+      WidgetsBinding.instance.removeObserver(this);
+      _cameraKey.currentState?.stopCameraStream();
+      _scannerController.removeListener(_scanParamsListener);
+      _cameraController?.dispose();
+      _worker?.close();
+    }
+    super.dispose();
+  }
+
   void _initialize() async {
     try {
       var initializeResult = await _initializeCamera();
       if (initializeResult) {
-        _isCameraInitialized.value = initializeResult;
+        _worker =
+            await ScannerWorker.spawn(cardScanTries: widget.cardScanTries);
+        _isInitialized.value = initializeResult;
       }
     } catch (e) {
       _handleError(ScannerException(e.toString()));
@@ -193,17 +191,13 @@ class _ScannerWidgetState extends State<ScannerWidget>
     }
   }
 
-  void _detect(InputImage image) async {
-    await _cardParser.detectCardContent(
-      image,
-      (resultCard) {
-        if (widget.oneShotScanning) {
-          _scannerController.disableScanning();
-        }
-        _handleData(resultCard);
-        Logger.log('Detect Card Details', resultCard.toString());
-      },
-    );
+  void _handle(CardInfo? card) async {
+    Logger.log('Detect Card Details', card.toString());
+    if (card == null) return;
+    if (widget.oneShotScanning) {
+      _scannerController.disableScanning();
+    }
+    _handleData(card);
   }
 
   void _scanParamsListener() {

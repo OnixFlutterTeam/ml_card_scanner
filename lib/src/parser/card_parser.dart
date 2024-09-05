@@ -1,9 +1,9 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:core';
+
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:ml_card_scanner/src/model/card_info.dart';
 import 'package:ml_card_scanner/src/parser/card_parser_const.dart';
 import 'package:ml_card_scanner/src/utils/card_info_variants_extension.dart';
-import 'dart:core';
 import 'package:ml_card_scanner/src/utils/int_extension.dart';
 import 'package:ml_card_scanner/src/utils/string_extension.dart';
 
@@ -16,9 +16,8 @@ class CardParser {
     required this.cardScanTries,
   });
 
-  Future<void> detectCardContent(
+  Future<CardInfo?> detectCardContent(
     InputImage inputImage,
-    ValueChanged<CardInfo> onDetected,
   ) async {
     CardInfo? cardOption;
     var input = await _textDetector.processImage(inputImage);
@@ -41,20 +40,21 @@ class CardParser {
     } catch (e, _) {
       cardOption = null;
     }
-    if (cardOption != null) {
-      _recognizedVariants.add(cardOption);
+    if (cardOption == null) {
+      return null;
     }
+    _recognizedVariants.add(cardOption);
+
     if (_recognizedVariants.length == cardScanTries) {
       final cardNumber = _recognizedVariants.getCardNumber();
       final cardDate = _recognizedVariants.getCardDate();
       final cardType = _recognizedVariants.getCardType();
       _recognizedVariants.clear();
-      onDetected(
-        CardInfo(
-          number: cardNumber,
-          type: cardType,
-          expiry: cardDate.possibleDateFormatted(),
-        ),
+
+      return CardInfo(
+        number: cardNumber,
+        type: cardType,
+        expiry: cardDate.possibleDateFormatted(),
       );
     }
   }
