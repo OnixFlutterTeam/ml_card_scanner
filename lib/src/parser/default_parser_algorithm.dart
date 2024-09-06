@@ -30,14 +30,16 @@ class DefaultParserAlgorithm extends ParserAlgorithm {
     } catch (e, _) {
       cardOption = null;
     }
-    if (cardOption != null) {
+
+    if (cardOption != null && cardOption.isValid()) {
+      print('cardOption: ${cardOption.toString()}');
       _recognizedVariants.add(cardOption);
     }
 
     if (_recognizedVariants.length == cardScanTries) {
       final cardNumber = _recognizedVariants.getCardNumber();
       final cardDate = _recognizedVariants.getCardDate();
-      final cardType = _recognizedVariants.getCardType();
+      final cardType = getCardType(cardNumber);
       _recognizedVariants.clear();
 
       return CardInfo(

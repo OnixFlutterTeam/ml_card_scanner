@@ -95,6 +95,9 @@ class _InitialScreenState extends State<InitialScreen> {
   }
 
   void _scanCard() async {
+    setState(() {
+      _cardInfo = null;
+    });
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) {

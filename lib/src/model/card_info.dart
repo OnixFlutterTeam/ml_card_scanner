@@ -1,3 +1,5 @@
+import 'package:ml_card_scanner/src/parser/card_parser_const.dart';
+
 class CardInfo {
   final String number;
   final String type;

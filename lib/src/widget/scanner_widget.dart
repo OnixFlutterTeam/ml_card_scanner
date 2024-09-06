@@ -57,12 +57,11 @@ class _ScannerWidgetState extends State<ScannerWidget>
   @override
   void initState() {
     super.initState();
-    if (mounted) {
-      WidgetsBinding.instance.addObserver(this);
-      _scannerController = widget.controller ?? ScannerWidgetController();
-      _scannerController.addListener(_scanParamsListener);
-      _initialize();
-    }
+    WidgetsBinding.instance.addObserver(this);
+    _scannerController = widget.controller ?? ScannerWidgetController();
+    _scannerController.addListener(_scanParamsListener);
+    _initialize();
+
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitDown,
       DeviceOrientation.portraitUp,
@@ -132,14 +131,11 @@ class _ScannerWidgetState extends State<ScannerWidget>
   @override
   void dispose() {
     _canProcess = false;
-
-    if (mounted) {
-      WidgetsBinding.instance.removeObserver(this);
-      _cameraKey.currentState?.stopCameraStream();
-      _scannerController.removeListener(_scanParamsListener);
-      _cameraController?.dispose();
-      _worker?.close();
-    }
+    WidgetsBinding.instance.removeObserver(this);
+    _cameraKey.currentState?.stopCameraStream();
+    _scannerController.removeListener(_scanParamsListener);
+    _cameraController?.dispose();
+    _worker?.close();
     super.dispose();
   }
 

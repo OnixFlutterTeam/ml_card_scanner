@@ -36,31 +36,4 @@ extension CardInfoVariantsExtension on List<CardInfo> {
     return resultList.join('');
   }
 
-  String getCardType() {
-    Map<String, int> typeCountMap = {};
-    for (var e in this) {
-      final type = e.type;
-      if (typeCountMap.containsKey(type)) {
-        typeCountMap[type] = (typeCountMap[type] ?? 0) + 1;
-      } else {
-        typeCountMap[type] = 1;
-      }
-    }
-    int max = -1;
-    String type = '';
-    typeCountMap.forEach(
-      (k, v) {
-        if (max == -1) {
-          max = v;
-          type = k;
-        } else {
-          if (v > max) {
-            max = v;
-            type = k;
-          }
-        }
-      },
-    );
-    return type;
-  }
 }
