@@ -7,6 +7,7 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:ml_card_scanner/ml_card_scanner.dart';
 import 'package:ml_card_scanner/src/model/typedefs.dart';
 import 'package:ml_card_scanner/src/parser/default_parser_algorithm.dart';
+import 'package:ml_card_scanner/src/utils/camera_image_util.dart';
 import 'package:ml_card_scanner/src/utils/logger.dart';
 import 'package:ml_card_scanner/src/utils/scanner_worker.dart';
 import 'package:ml_card_scanner/src/widget/camera_overlay_widget.dart';
@@ -43,7 +44,7 @@ class ScannerWidget extends StatefulWidget {
 }
 
 class _ScannerWidgetState extends State<ScannerWidget>
-    {
+    with WidgetsBindingObserver {
   final GlobalKey<CameraViewState> _cameraKey = GlobalKey();
   final ValueNotifier<bool> _isInitialized = ValueNotifier(false);
   late CameraDescription _camera;
@@ -52,11 +53,12 @@ class _ScannerWidgetState extends State<ScannerWidget>
   ScannerWorker? _worker;
   bool _isBusy = false;
   bool _canProcess = true;
+  int _lastFrameDecode = 0;
 
   @override
   void initState() {
     super.initState();
-
+    WidgetsBinding.instance.addObserver(this);
     _scannerController = widget.controller ?? ScannerWidgetController();
     _scannerController.addListener(_scanParamsListener);
     _initialize();
@@ -83,8 +85,6 @@ class _ScannerWidgetState extends State<ScannerWidget>
                 key: _cameraKey,
                 cameraController: controller,
                 cameraDescription: _camera,
-                onInputImage: _handleInputImage,
-                scannerDelay: widget.scannerDelay,
                 cameraPreviewBuilder: widget.cameraPreviewBuilder,
                 scannerController: _scannerController,
               );
@@ -113,11 +113,27 @@ class _ScannerWidgetState extends State<ScannerWidget>
   @override
   void dispose() {
     _canProcess = false;
-    _cameraKey.currentState?.stopCameraStream();
+    WidgetsBinding.instance.removeObserver(this);
     _scannerController.removeListener(_scanParamsListener);
     _cameraController?.dispose();
     _worker?.close();
     super.dispose();
+  }
+
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    final isCameraInitialized = _cameraController?.value.isInitialized ?? false;
+
+    if (state == AppLifecycleState.inactive) {
+      _cameraController?.stopImageStream();
+      _cameraController?.dispose();
+      _cameraController = null;
+    } else if (state == AppLifecycleState.resumed) {
+      if (isCameraInitialized) {
+        return;
+      }
+      _initializeCamera();
+    }
   }
 
   void _initialize() async {
@@ -162,6 +178,10 @@ class _ScannerWidgetState extends State<ScannerWidget>
           : ImageFormatGroup.bgra8888,
     );
     await _cameraController?.initialize();
+    if (_scannerController.scanningEnabled) {
+      _cameraController?.startImageStream(_onFrame);
+    }
+    setState(() {});
     return true;
   }
 
@@ -174,6 +194,54 @@ class _ScannerWidgetState extends State<ScannerWidget>
       case CameraResolution.ultra:
         return ResolutionPreset.ultraHigh;
     }
+  }
+
+  Future<void> _onFrame(CameraImage image) async {
+    final cc = _cameraController;
+    if (cc == null) return;
+    if (!cc.value.isInitialized) return;
+    if (!_scannerController.scanningEnabled) return;
+
+    if ((DateTime.now().millisecondsSinceEpoch - _lastFrameDecode) <
+        widget.scannerDelay) {
+      return;
+    }
+    _lastFrameDecode = DateTime.now().millisecondsSinceEpoch;
+
+    try {
+      final sensorOrientation = _camera.sensorOrientation;
+      final rotation = CameraImageUtil.getImageRotation(
+        sensorOrientation,
+        cc.value.deviceOrientation,
+        _camera.lensDirection,
+      );
+
+      if (rotation == null) {
+        return;
+      }
+      final format = InputImageFormatValue.fromRawValue(
+        image.format.raw,
+      );
+
+      if (image.planes.isEmpty) {
+        return;
+      }
+      final plane = image.planes.first;
+      final bytes = image.planes.map((e) => e.bytes).toList();
+
+      _handleInputImage(
+        bytes,
+        InputImageMetadata(
+          size: Size(
+            image.width.toDouble(),
+            image.height.toDouble(),
+          ),
+          rotation: rotation,
+          format: format ?? InputImageFormat.yuv420,
+          bytesPerRow: plane.bytesPerRow,
+        ),
+      );
+    } catch (_) {}
   }
 
   void _handleInputImage(
@@ -207,9 +275,9 @@ class _ScannerWidgetState extends State<ScannerWidget>
 
   void _scanParamsListener() {
     if (_scannerController.scanningEnabled) {
-      _cameraKey.currentState?.startCameraStream();
+      _cameraController?.startImageStream(_onFrame);
     } else {
-      _cameraKey.currentState?.stopCameraStream();
+      _cameraController?.stopImageStream();
     }
     if (_scannerController.cameraPreviewEnabled) {
       _cameraController?.resumePreview();
