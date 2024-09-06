@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ml_card_scanner/ml_card_scanner.dart';
 import 'package:ml_card_scanner/src/model/typedefs.dart';
+import 'package:ml_card_scanner/src/parser/default_parser_algorithm.dart';
 import 'package:ml_card_scanner/src/utils/logger.dart';
 import 'package:ml_card_scanner/src/utils/scanner_worker.dart';
 import 'package:ml_card_scanner/src/widget/camera_overlay_widget.dart';
@@ -141,8 +142,9 @@ class _ScannerWidgetState extends State<ScannerWidget>
     try {
       var initializeResult = await _initializeCamera();
       if (initializeResult) {
-        _worker =
-            await ScannerWorker.spawn(cardScanTries: widget.cardScanTries);
+        _worker = await ScannerWorker.spawn(
+          algorithm: DefaultParserAlgorithm(widget.cardScanTries),
+        );
         _isInitialized.value = initializeResult;
       }
     } catch (e) {

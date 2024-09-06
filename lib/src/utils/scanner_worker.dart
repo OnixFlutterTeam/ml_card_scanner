@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:isolate';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:ml_card_scanner/src/model/typedefs.dart';
-import 'package:ml_card_scanner/src/parser/card_parser.dart';
+import 'package:ml_card_scanner/src/parser/parser_algorithm.dart';
 
 typedef _WorkerMessageType = (
   int,
@@ -43,7 +44,7 @@ class ScannerWorker {
   }
 
   static Future<ScannerWorker> spawn({
-    required int cardScanTries,
+    required ParserAlgorithm algorithm,
   }) async {
     final token = RootIsolateToken.instance;
 
@@ -65,7 +66,7 @@ class ScannerWorker {
         _IsolateData(
           token: token,
           sendPort: initPort.sendPort,
-          cardScanTries: cardScanTries,
+          parserAlgorithm: algorithm,
         ),
       );
     } on Object {
@@ -102,11 +103,14 @@ class ScannerWorker {
   static void _handleCommandsToIsolate(
     ReceivePort receivePort,
     SendPort sendPort,
-    int cardScanTries,
+    ParserAlgorithm algorithm,
   ) {
-    final parser = CardParser(cardScanTries: cardScanTries);
+    final TextRecognizer recognizer =
+        TextRecognizer(script: TextRecognitionScript.latin);
+
     receivePort.listen((message) async {
       if (message == 'shutdown') {
+        await recognizer.close();
         receivePort.close();
         return;
       }
@@ -136,8 +140,8 @@ class ScannerWorker {
             bytesPerRow: bytesPerRow,
           ),
         );
-
-        final result = await parser.detectCardContent(inputImage);
+        var input = await recognizer.processImage(inputImage);
+        final result = await algorithm.parse(input);
         sendPort.send((id, result?.toJson()));
       } catch (e) {
         sendPort.send((id, RemoteError(e.toString(), '')));
@@ -147,9 +151,14 @@ class ScannerWorker {
 
   static void _startRemoteIsolate(_IsolateData data) {
     BackgroundIsolateBinaryMessenger.ensureInitialized(data.token);
+    DartPluginRegistrant.ensureInitialized();
     final receivePort = ReceivePort();
     data.sendPort.send(receivePort.sendPort);
-    _handleCommandsToIsolate(receivePort, data.sendPort, data.cardScanTries);
+    _handleCommandsToIsolate(
+      receivePort,
+      data.sendPort,
+      data.parserAlgorithm,
+    );
   }
 
   void close() {
@@ -167,11 +176,11 @@ class ScannerWorker {
 class _IsolateData {
   final RootIsolateToken token;
   final SendPort sendPort;
-  final int cardScanTries;
+  final ParserAlgorithm parserAlgorithm;
 
   _IsolateData({
     required this.token,
     required this.sendPort,
-    required this.cardScanTries,
+    required this.parserAlgorithm,
   });
 }

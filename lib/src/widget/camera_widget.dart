@@ -35,6 +35,7 @@ class CameraWidget extends StatefulWidget {
 
 class CameraViewState extends State<CameraWidget> {
   int _lastFrameDecode = 0;
+  bool _isBusy = false;
 
   Future<void> stopCameraStream() async {
     if (!widget.cameraController.value.isStreamingImages) {
@@ -88,6 +89,9 @@ class CameraViewState extends State<CameraWidget> {
       return;
     }
 
+    if (_isBusy) return;
+
+    _isBusy = true;
     _lastFrameDecode = DateTime.now().millisecondsSinceEpoch;
 
     try {
@@ -98,10 +102,16 @@ class CameraViewState extends State<CameraWidget> {
         widget.cameraDescription.lensDirection,
       );
 
-      if (rotation == null) return;
+      if (rotation == null) {
+        _isBusy = false;
+        return;
+      }
       final format = InputImageFormatValue.fromRawValue(image.format.raw);
 
-      if (image.planes.isEmpty) return;
+      if (image.planes.isEmpty) {
+        _isBusy = false;
+        return;
+      }
 
       final plane = image.planes.first;
       final bytes = image.planes.map((e) => e.bytes).toList();
@@ -116,6 +126,8 @@ class CameraViewState extends State<CameraWidget> {
       widget.onCard(result != null ? CardInfo.fromJson(result) : null);
     } catch (_) {
       widget.onCard(null);
+    } finally {
+      _isBusy = false;
     }
   }
 }

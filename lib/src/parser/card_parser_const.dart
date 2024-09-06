@@ -8,4 +8,6 @@ class CardParserConst {
   static const String cardUnknown = 'Unknown';
   static const String cardVisaParam = '4';
   static const String cardMasterCardParam = '5';
+
+  const CardParserConst._();
 }

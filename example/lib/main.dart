@@ -40,7 +40,6 @@ class _MainScreenState extends State<MainScreen> {
                 controller: _controller,
                 overlayOrientation: CardOrientation.landscape,
                 cameraResolution: CameraResolution.high,
-                oneShotScanning: false,
               ),
             ),
             Container(
