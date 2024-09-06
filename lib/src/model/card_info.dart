@@ -23,7 +23,7 @@ class CardInfo {
         'expiry': expiry,
       };
 
-  bool isValid() => number.isNotEmpty && number.length == 16;
+  bool isValid() => number.isNotEmpty && number.length == CardParserConst.cardNumberLength;
 
   @override
   String toString() {
@@ -31,7 +31,7 @@ class CardInfo {
   }
 
   String numberFormatted() {
-    if (number.isEmpty || number.length != 16) {
+    if (number.isEmpty || number.length != CardParserConst.cardNumberLength) {
       return '';
     }
     final buffer = StringBuffer();
