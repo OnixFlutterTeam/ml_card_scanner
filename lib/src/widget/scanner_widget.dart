@@ -132,11 +132,13 @@ class _ScannerWidgetState extends State<ScannerWidget>
   @override
   void dispose() {
     _canProcess = false;
+
     if (mounted) {
       WidgetsBinding.instance.removeObserver(this);
       _cameraKey.currentState?.stopCameraStream();
       _scannerController.removeListener(_scanParamsListener);
       _cameraController?.dispose();
+      _worker?.close();
     }
     super.dispose();
   }
