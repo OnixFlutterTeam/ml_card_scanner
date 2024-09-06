@@ -45,8 +45,7 @@ class ScannerWidget extends StatefulWidget {
 
 class _ScannerWidgetState extends State<ScannerWidget>
     with WidgetsBindingObserver {
-  final GlobalKey<CameraViewState> _cameraKey = GlobalKey();
-  final ValueNotifier<bool> _isInitialized = ValueNotifier(false);
+  final ValueNotifier<CameraController?> _isInitialized = ValueNotifier(null);
   late CameraDescription _camera;
   late ScannerWidgetController _scannerController;
   CameraController? _cameraController;
@@ -73,24 +72,16 @@ class _ScannerWidgetState extends State<ScannerWidget>
   Widget build(BuildContext context) {
     return Stack(
       children: <Widget>[
-        ValueListenableBuilder<bool>(
+        ValueListenableBuilder<CameraController?>(
           valueListenable: _isInitialized,
-          builder: (context, isInitialized, _) {
-            final controller = _cameraController;
-
-            if (controller == null) return const SizedBox.shrink();
-
-            if (isInitialized) {
-              return CameraWidget(
-                key: _cameraKey,
-                cameraController: controller,
-                cameraDescription: _camera,
-                cameraPreviewBuilder: widget.cameraPreviewBuilder,
-                scannerController: _scannerController,
-              );
-            }
-
-            return const SizedBox.shrink();
+          builder: (context, cc, _) {
+            print('cc');
+            if (cc == null) return const SizedBox.shrink();
+            _cameraController = cc;
+            return CameraWidget(
+              cameraController: cc,
+              cameraPreviewBuilder: widget.cameraPreviewBuilder,
+            );
           },
         ),
         widget.overlayBuilder?.call(context) ??
@@ -125,6 +116,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
     final isCameraInitialized = _cameraController?.value.isInitialized ?? false;
 
     if (state == AppLifecycleState.inactive) {
+      _isInitialized.value = null;
       _cameraController?.stopImageStream();
       _cameraController?.dispose();
       _cameraController = null;
@@ -138,38 +130,37 @@ class _ScannerWidgetState extends State<ScannerWidget>
 
   void _initialize() async {
     try {
-      var initializeResult = await _initializeCamera();
-      if (initializeResult) {
+      var cameraController = await _initializeCamera();
+      if (cameraController != null) {
         _worker = await ScannerWorker.spawn(
           algorithm: DefaultParserAlgorithm(widget.cardScanTries),
         );
-        _isInitialized.value = initializeResult;
       }
     } catch (e) {
       _handleError(ScannerException(e.toString()));
     }
   }
 
-  Future<bool> _initializeCamera() async {
+  Future<CameraController?> _initializeCamera() async {
     var status = await Permission.camera.request();
     if (!status.isGranted) {
       _handleError(const ScannerPermissionIsNotGrantedException());
-      return false;
+      return null;
     }
 
     final cameras = await availableCameras();
     if (cameras.isEmpty) {
       _handleError(const ScannerNoCamerasAvailableException());
-      return false;
+      return null;
     }
     if ((cameras.where((cam) => cam.lensDirection == CameraLensDirection.back))
         .isEmpty) {
       _handleError(const ScannerNoBackCameraAvailableException());
-      return false;
+      return null;
     }
     _camera = cameras
         .firstWhere((cam) => cam.lensDirection == CameraLensDirection.back);
-    _cameraController = CameraController(
+    final cameraController = CameraController(
       _camera,
       _getResolutionPreset(),
       enableAudio: false,
@@ -177,12 +168,12 @@ class _ScannerWidgetState extends State<ScannerWidget>
           ? ImageFormatGroup.nv21
           : ImageFormatGroup.bgra8888,
     );
-    await _cameraController?.initialize();
+    await cameraController.initialize();
     if (_scannerController.scanningEnabled) {
-      _cameraController?.startImageStream(_onFrame);
+      cameraController.startImageStream(_onFrame);
     }
-    setState(() {});
-    return true;
+    _isInitialized.value = cameraController;
+    return cameraController;
   }
 
   ResolutionPreset _getResolutionPreset() {
