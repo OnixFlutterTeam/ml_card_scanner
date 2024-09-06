@@ -116,8 +116,11 @@ class _ScannerWidgetState extends State<ScannerWidget>
     final isCameraInitialized = _cameraController?.value.isInitialized ?? false;
 
     if (state == AppLifecycleState.inactive) {
+      final isStreaming = _cameraController?.value.isStreamingImages ?? false;
       _isInitialized.value = null;
-      _cameraController?.stopImageStream();
+      if (isStreaming) {
+        _cameraController?.stopImageStream();
+      }
       _cameraController?.dispose();
       _cameraController = null;
     } else if (state == AppLifecycleState.resumed) {
@@ -169,7 +172,8 @@ class _ScannerWidgetState extends State<ScannerWidget>
           : ImageFormatGroup.bgra8888,
     );
     await cameraController.initialize();
-    if (_scannerController.scanningEnabled) {
+    final isStreaming = _cameraController?.value.isStreamingImages ?? false;
+    if (_scannerController.scanningEnabled && !isStreaming) {
       cameraController.startImageStream(_onFrame);
     }
     _isInitialized.value = cameraController;
@@ -265,10 +269,15 @@ class _ScannerWidgetState extends State<ScannerWidget>
   }
 
   void _scanParamsListener() {
+    final isStreaming = _cameraController?.value.isStreamingImages ?? false;
     if (_scannerController.scanningEnabled) {
-      _cameraController?.startImageStream(_onFrame);
+      if (!isStreaming) {
+        _cameraController?.startImageStream(_onFrame);
+      }
     } else {
-      _cameraController?.stopImageStream();
+      if (isStreaming) {
+        _cameraController?.stopImageStream();
+      }
     }
     if (_scannerController.cameraPreviewEnabled) {
       _cameraController?.resumePreview();
