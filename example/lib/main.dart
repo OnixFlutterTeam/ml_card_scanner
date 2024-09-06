@@ -47,7 +47,7 @@ class _InitialScreenState extends State<InitialScreen> {
                             _cardInfo?.numberFormatted() ?? '',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 28,
+                              fontSize: 24,
                               letterSpacing: 2,
                             ),
                           ),
