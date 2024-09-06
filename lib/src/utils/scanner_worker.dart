@@ -126,13 +126,15 @@ class ScannerWorker {
       ) = message as _WorkerMessageType;
 
       try {
+        final bytesAll = Uint8List.fromList(
+          bytes.fold(
+              <int>[],
+              (List<int> previousValue, element) =>
+                  previousValue..addAll(element)),
+        );
+
         final inputImage = InputImage.fromBytes(
-          bytes: Uint8List.fromList(
-            bytes.fold(
-                <int>[],
-                (List<int> previousValue, element) =>
-                    previousValue..addAll(element)),
-          ),
+          bytes: bytesAll,
           metadata: InputImageMetadata(
             size: Size(width.toDouble(), height.toDouble()),
             rotation: rotation,

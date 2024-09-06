@@ -6,7 +6,6 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:ml_card_scanner/ml_card_scanner.dart';
 import 'package:ml_card_scanner/src/model/typedefs.dart';
 import 'package:ml_card_scanner/src/utils/camera_image_util.dart';
-import 'package:ml_card_scanner/src/utils/scanner_worker.dart';
 import 'package:ml_card_scanner/src/widget/camera_preview_wrapper.dart';
 
 class CameraWidget extends StatefulWidget {
@@ -14,16 +13,14 @@ class CameraWidget extends StatefulWidget {
   final CameraDescription cameraDescription;
   final int scannerDelay;
   final CameraPreviewBuilder? cameraPreviewBuilder;
-  final CardInfoCallback onCard;
-  final ScannerWorker? worker;
+  final InputImageCallback onInputImage;
   final ScannerWidgetController scannerController;
 
   const CameraWidget({
     required this.cameraController,
     required this.cameraDescription,
-    required this.onCard,
+    required this.onInputImage,
     required this.scannerDelay,
-    required this.worker,
     required this.scannerController,
     this.cameraPreviewBuilder,
     super.key,
@@ -35,7 +32,6 @@ class CameraWidget extends StatefulWidget {
 
 class CameraViewState extends State<CameraWidget> {
   int _lastFrameDecode = 0;
-  bool _isBusy = false;
 
   Future<void> stopCameraStream() async {
     if (!widget.cameraController.value.isStreamingImages) {
@@ -88,10 +84,6 @@ class CameraViewState extends State<CameraWidget> {
         widget.scannerDelay) {
       return;
     }
-
-    if (_isBusy) return;
-
-    _isBusy = true;
     _lastFrameDecode = DateTime.now().millisecondsSinceEpoch;
 
     try {
@@ -103,31 +95,30 @@ class CameraViewState extends State<CameraWidget> {
       );
 
       if (rotation == null) {
-        _isBusy = false;
         return;
       }
-      final format = InputImageFormatValue.fromRawValue(image.format.raw);
+      final format = InputImageFormatValue.fromRawValue(
+        image.format.raw,
+      );
 
       if (image.planes.isEmpty) {
-        _isBusy = false;
         return;
       }
-
       final plane = image.planes.first;
       final bytes = image.planes.map((e) => e.bytes).toList();
-      final result = await widget.worker?.processImage(
+
+      widget.onInputImage(
         bytes,
-        image.width,
-        image.height,
-        rotation,
-        format,
-        plane.bytesPerRow,
+        InputImageMetadata(
+          size: Size(
+            image.width.toDouble(),
+            image.height.toDouble(),
+          ),
+          rotation: rotation,
+          format: format ?? InputImageFormat.yuv420,
+          bytesPerRow: plane.bytesPerRow,
+        ),
       );
-      widget.onCard(result != null ? CardInfo.fromJson(result) : null);
-    } catch (_) {
-      widget.onCard(null);
-    } finally {
-      _isBusy = false;
-    }
+    } catch (_) {}
   }
 }

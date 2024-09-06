@@ -10,23 +10,28 @@ extension StringExtension on String {
         ..replaceAll('o', '0')
         ..replaceAll('O', '0');
 
-
   String possibleDateFormatted() {
+    if (isEmpty || length != 4) {
+      return '';
+    }
     final m = substring(0, 2);
     final y = substring(2, 4);
     return '$m/$y';
   }
 
   int getDateMonthNumber() {
+    if (isEmpty || length != 4) {
+      return 0;
+    }
     final m = substring(0, 2);
     return int.tryParse(m) ?? -1;
   }
 
   int getDateYearNumber() {
+    if (isEmpty || length != 4) {
+      return 0;
+    }
     final y = substring(2, 4);
     return int.tryParse(y) ?? -1;
   }
-
-
-
 }

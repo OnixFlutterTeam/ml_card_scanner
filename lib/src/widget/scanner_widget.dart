@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:ml_card_scanner/ml_card_scanner.dart';
 import 'package:ml_card_scanner/src/model/typedefs.dart';
 import 'package:ml_card_scanner/src/parser/default_parser_algorithm.dart';
@@ -47,8 +48,11 @@ class _ScannerWidgetState extends State<ScannerWidget>
   final ValueNotifier<bool> _isInitialized = ValueNotifier(false);
   late CameraDescription _camera;
   late ScannerWidgetController _scannerController;
-  ScannerWorker? _worker;
   CameraController? _cameraController;
+
+  ScannerWorker? _worker;
+  bool _isBusy = false;
+  bool _canProcess = true;
 
   @override
   void initState() {
@@ -98,10 +102,9 @@ class _ScannerWidgetState extends State<ScannerWidget>
                 key: _cameraKey,
                 cameraController: controller,
                 cameraDescription: _camera,
-                onCard: _handle,
+                onInputImage: _handleInputImage,
                 scannerDelay: widget.scannerDelay,
                 cameraPreviewBuilder: widget.cameraPreviewBuilder,
-                worker: _worker,
                 scannerController: _scannerController,
               );
             }
@@ -128,12 +131,12 @@ class _ScannerWidgetState extends State<ScannerWidget>
 
   @override
   void dispose() {
+    _canProcess = false;
     if (mounted) {
       WidgetsBinding.instance.removeObserver(this);
       _cameraKey.currentState?.stopCameraStream();
       _scannerController.removeListener(_scanParamsListener);
       _cameraController?.dispose();
-      _worker?.close();
     }
     super.dispose();
   }
@@ -194,13 +197,33 @@ class _ScannerWidgetState extends State<ScannerWidget>
     }
   }
 
-  void _handle(CardInfo? card) async {
-    Logger.log('Detect Card Details', card.toString());
-    if (card == null) return;
+  void _handleInputImage(
+    List<Uint8List> imageBytes,
+    InputImageMetadata metadata,
+  ) async {
+    if (!_canProcess) return;
+    if (_isBusy) return;
+    _isBusy = true;
+
+    final cardJson = await _worker?.processImage(
+      imageBytes,
+      metadata.size.width.toInt(),
+      metadata.size.height.toInt(),
+      metadata.rotation,
+      metadata.format,
+      metadata.bytesPerRow,
+    );
+    final cardInfo = (cardJson != null) ? CardInfo.fromJson(cardJson) : null;
+    if (cardInfo == null) {
+      _isBusy = false;
+      return;
+    }
+    Logger.log('Detect Card Details', cardInfo.toString());
     if (widget.oneShotScanning) {
       _scannerController.disableScanning();
     }
-    _handleData(card);
+    _handleData(cardInfo);
+    _isBusy = false;
   }
 
   void _scanParamsListener() {
