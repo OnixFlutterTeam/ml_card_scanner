@@ -66,13 +66,10 @@ class CameraViewState extends State<CameraWidget> {
           const SizedBox.shrink();
     }
 
-    return Transform.scale(
-      scale: 1 / mediaSize.aspectRatio,
-      child: Center(
-        child: AspectRatio(
-          aspectRatio: mediaSize.aspectRatio,
-          child: CameraPreview(widget.cameraController),
-        ),
+    return Center(
+      child: AspectRatio(
+        aspectRatio: mediaSize.aspectRatio,
+        child: CameraPreview(widget.cameraController),
       ),
     );
   }
