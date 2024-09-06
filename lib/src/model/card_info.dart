@@ -27,4 +27,19 @@ class CardInfo {
   String toString() {
     return 'Card Info\nnumber: $number\ntype: $type\nexpiry: $expiry';
   }
+
+  String numberFormatted() {
+    if (number.isEmpty || number.length != 16) {
+      return '';
+    }
+    final buffer = StringBuffer();
+
+    for (int i = 0; i < 16; i = i + 4) {
+      if (i + 4 <= 16) {
+        final sub = number.substring(i, i + 4);
+        buffer.write('$sub ');
+      }
+    }
+    return buffer.toString();
+  }
 }
