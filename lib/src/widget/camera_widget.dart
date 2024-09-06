@@ -30,7 +30,7 @@ class CameraWidget extends StatefulWidget {
   CameraViewState createState() => CameraViewState();
 }
 
-class CameraViewState extends State<CameraWidget> {
+class CameraViewState extends State<CameraWidget> with WidgetsBindingObserver {
   int _lastFrameDecode = 0;
 
   Future<void> stopCameraStream() async {
@@ -48,9 +48,23 @@ class CameraViewState extends State<CameraWidget> {
   }
 
   @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (!widget.cameraController.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive) {
+      widget.cameraController.stopImageStream();
+    } else if (state == AppLifecycleState.resumed) {
+      widget.cameraController.startImageStream(_processCameraImage);
+    }
+  }
+
+  @override
   void initState() {
-    super.initState();
+    WidgetsBinding.instance.addObserver(this);
     startCameraStream();
+    super.initState();
   }
 
   @override
@@ -72,6 +86,12 @@ class CameraViewState extends State<CameraWidget> {
         child: CameraPreview(widget.cameraController),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   Future<void> _processCameraImage(CameraImage image) async {

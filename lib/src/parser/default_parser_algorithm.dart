@@ -32,7 +32,6 @@ class DefaultParserAlgorithm extends ParserAlgorithm {
     }
 
     if (cardOption != null && cardOption.isValid()) {
-      print('cardOption: ${cardOption.toString()}');
       _recognizedVariants.add(cardOption);
     }
 

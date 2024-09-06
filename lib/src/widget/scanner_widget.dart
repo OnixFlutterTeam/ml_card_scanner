@@ -43,13 +43,12 @@ class ScannerWidget extends StatefulWidget {
 }
 
 class _ScannerWidgetState extends State<ScannerWidget>
-    with WidgetsBindingObserver {
+    {
   final GlobalKey<CameraViewState> _cameraKey = GlobalKey();
   final ValueNotifier<bool> _isInitialized = ValueNotifier(false);
   late CameraDescription _camera;
   late ScannerWidgetController _scannerController;
   CameraController? _cameraController;
-
   ScannerWorker? _worker;
   bool _isBusy = false;
   bool _canProcess = true;
@@ -57,7 +56,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+
     _scannerController = widget.controller ?? ScannerWidgetController();
     _scannerController.addListener(_scanParamsListener);
     _initialize();
@@ -66,23 +65,6 @@ class _ScannerWidgetState extends State<ScannerWidget>
       DeviceOrientation.portraitDown,
       DeviceOrientation.portraitUp,
     ]);
-  }
-
-  @override
-  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-    try {
-      if (!(_cameraController?.value.isInitialized ?? false)) {
-        return;
-      }
-
-      if (state == AppLifecycleState.inactive) {
-        _cameraKey.currentState?.stopCameraStream();
-      } else if (state == AppLifecycleState.resumed) {
-        _cameraKey.currentState?.startCameraStream();
-      }
-    } catch (e) {
-      _handleError(ScannerException(e.toString()));
-    }
   }
 
   @override
@@ -131,7 +113,6 @@ class _ScannerWidgetState extends State<ScannerWidget>
   @override
   void dispose() {
     _canProcess = false;
-    WidgetsBinding.instance.removeObserver(this);
     _cameraKey.currentState?.stopCameraStream();
     _scannerController.removeListener(_scanParamsListener);
     _cameraController?.dispose();
