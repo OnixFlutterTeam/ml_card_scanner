@@ -1,6 +1,5 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-
 import 'package:ml_card_scanner/src/model/typedefs.dart';
 import 'package:ml_card_scanner/src/widget/camera_preview_wrapper.dart';
 
@@ -27,9 +26,12 @@ class CameraWidget extends StatelessWidget {
     }
 
     return Center(
-      child: AspectRatio(
-        aspectRatio: mediaSize.aspectRatio,
-        child: CameraPreview(cameraController),
+      child: SizedBox(
+        width: mediaSize.width,
+        child: AspectRatio(
+          aspectRatio: mediaSize.aspectRatio,
+          child: CameraPreview(cameraController),
+        ),
       ),
     );
   }

@@ -3,13 +3,13 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:ml_card_scanner/ml_card_scanner.dart';
 import 'package:ml_card_scanner/src/model/typedefs.dart';
 import 'package:ml_card_scanner/src/parser/default_parser_algorithm.dart';
+import 'package:ml_card_scanner/src/parser/parser_algorithm.dart';
 import 'package:ml_card_scanner/src/utils/camera_image_util.dart';
 import 'package:ml_card_scanner/src/utils/logger.dart';
-import 'package:ml_card_scanner/src/utils/scanner_worker.dart';
+import 'package:ml_card_scanner/src/utils/scanner_processor.dart';
 import 'package:ml_card_scanner/src/widget/camera_overlay_widget.dart';
 import 'package:ml_card_scanner/src/widget/camera_widget.dart';
 import 'package:ml_card_scanner/src/widget/text_overlay_widget.dart';
@@ -46,12 +46,13 @@ class ScannerWidget extends StatefulWidget {
 class _ScannerWidgetState extends State<ScannerWidget>
     with WidgetsBindingObserver {
   final ValueNotifier<CameraController?> _isInitialized = ValueNotifier(null);
+  final ScannerProcessor _processor = ScannerProcessor();
   late CameraDescription _camera;
   late ScannerWidgetController _scannerController;
+  late final ParserAlgorithm _algorithm =
+      DefaultParserAlgorithm(widget.cardScanTries);
   CameraController? _cameraController;
-  ScannerWorker? _worker;
   bool _isBusy = false;
-  bool _canProcess = true;
   int _lastFrameDecode = 0;
 
   @override
@@ -75,7 +76,6 @@ class _ScannerWidgetState extends State<ScannerWidget>
         ValueListenableBuilder<CameraController?>(
           valueListenable: _isInitialized,
           builder: (context, cc, _) {
-            print('cc');
             if (cc == null) return const SizedBox.shrink();
             _cameraController = cc;
             return CameraWidget(
@@ -103,11 +103,9 @@ class _ScannerWidgetState extends State<ScannerWidget>
 
   @override
   void dispose() {
-    _canProcess = false;
     WidgetsBinding.instance.removeObserver(this);
     _scannerController.removeListener(_scanParamsListener);
     _cameraController?.dispose();
-    _worker?.close();
     super.dispose();
   }
 
@@ -133,12 +131,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
 
   void _initialize() async {
     try {
-      var cameraController = await _initializeCamera();
-      if (cameraController != null) {
-        _worker = await ScannerWorker.spawn(
-          algorithm: DefaultParserAlgorithm(widget.cardScanTries),
-        );
-      }
+      await _initializeCamera();
     } catch (e) {
       _handleError(ScannerException(e.toString()));
     }
@@ -203,6 +196,16 @@ class _ScannerWidgetState extends State<ScannerWidget>
     }
     _lastFrameDecode = DateTime.now().millisecondsSinceEpoch;
 
+    _handleInputImage(image, cc);
+  }
+
+  void _handleInputImage(
+    CameraImage image,
+    CameraController cc,
+  ) async {
+    if (_isBusy) return;
+    _isBusy = true;
+
     try {
       final sensorOrientation = _camera.sensorOrientation;
       final rotation = CameraImageUtil.getImageRotation(
@@ -212,59 +215,26 @@ class _ScannerWidgetState extends State<ScannerWidget>
       );
 
       if (rotation == null) {
+        _isBusy = false;
         return;
       }
-      final format = InputImageFormatValue.fromRawValue(
-        image.format.raw,
-      );
 
       if (image.planes.isEmpty) {
+        _isBusy = false;
         return;
       }
-      final plane = image.planes.first;
-      final bytes = image.planes.map((e) => e.bytes).toList();
 
-      _handleInputImage(
-        bytes,
-        InputImageMetadata(
-          size: Size(
-            image.width.toDouble(),
-            image.height.toDouble(),
-          ),
-          rotation: rotation,
-          format: format ?? InputImageFormat.yuv420,
-          bytesPerRow: plane.bytesPerRow,
-        ),
-      );
+      final cardInfo =
+          await _processor.computeImage(_algorithm, image, rotation);
+
+      if (widget.oneShotScanning) {
+        _scannerController.disableScanning();
+      }
+
+      if (cardInfo != null) {
+        _handleData(cardInfo);
+      }
     } catch (_) {}
-  }
-
-  void _handleInputImage(
-    List<Uint8List> imageBytes,
-    InputImageMetadata metadata,
-  ) async {
-    if (!_canProcess) return;
-    if (_isBusy) return;
-    _isBusy = true;
-
-    final cardJson = await _worker?.processImage(
-      imageBytes,
-      metadata.size.width.toInt(),
-      metadata.size.height.toInt(),
-      metadata.rotation,
-      metadata.format,
-      metadata.bytesPerRow,
-    );
-    final cardInfo = (cardJson != null) ? CardInfo.fromJson(cardJson) : null;
-    if (cardInfo == null) {
-      _isBusy = false;
-      return;
-    }
-    Logger.log('Detect Card Details', cardInfo.toString());
-    if (widget.oneShotScanning) {
-      _scannerController.disableScanning();
-    }
-    _handleData(cardInfo);
     _isBusy = false;
   }
 
@@ -287,6 +257,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
   }
 
   void _handleData(CardInfo cardInfo) {
+    Logger.log('Detect Card Details', cardInfo.toString());
     final cardScannedCallback = _scannerController.onCardScanned;
     cardScannedCallback?.call(cardInfo);
   }
