@@ -9,6 +9,7 @@ import 'package:ml_card_scanner/src/parser/default_parser_algorithm.dart';
 import 'package:ml_card_scanner/src/parser/parser_algorithm.dart';
 import 'package:ml_card_scanner/src/utils/camera_image_util.dart';
 import 'package:ml_card_scanner/src/utils/logger.dart';
+import 'package:ml_card_scanner/src/utils/resolution_preset_ext.dart';
 import 'package:ml_card_scanner/src/utils/scanner_processor.dart';
 import 'package:ml_card_scanner/src/widget/camera_overlay_widget.dart';
 import 'package:ml_card_scanner/src/widget/camera_widget.dart';
@@ -106,6 +107,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
     WidgetsBinding.instance.removeObserver(this);
     _scannerController.removeListener(_scanParamsListener);
     _cameraController?.dispose();
+    _processor.dispose();
     super.dispose();
   }
 
@@ -158,7 +160,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
         .firstWhere((cam) => cam.lensDirection == CameraLensDirection.back);
     final cameraController = CameraController(
       _camera,
-      _getResolutionPreset(),
+      widget.cameraResolution.convertToResolutionPreset(),
       enableAudio: false,
       imageFormatGroup: Platform.isAndroid
           ? ImageFormatGroup.nv21
@@ -171,17 +173,6 @@ class _ScannerWidgetState extends State<ScannerWidget>
     }
     _isInitialized.value = cameraController;
     return cameraController;
-  }
-
-  ResolutionPreset _getResolutionPreset() {
-    switch (widget.cameraResolution) {
-      case CameraResolution.max:
-        return ResolutionPreset.max;
-      case CameraResolution.high:
-        return ResolutionPreset.veryHigh;
-      case CameraResolution.ultra:
-        return ResolutionPreset.ultraHigh;
-    }
   }
 
   Future<void> _onFrame(CameraImage image) async {
@@ -226,7 +217,6 @@ class _ScannerWidgetState extends State<ScannerWidget>
 
       final cardInfo =
           await _processor.computeImage(_algorithm, image, rotation);
-
 
       if (cardInfo != null) {
         if (widget.oneShotScanning) {
