@@ -227,11 +227,11 @@ class _ScannerWidgetState extends State<ScannerWidget>
       final cardInfo =
           await _processor.computeImage(_algorithm, image, rotation);
 
-      if (widget.oneShotScanning) {
-        _scannerController.disableScanning();
-      }
 
       if (cardInfo != null) {
+        if (widget.oneShotScanning) {
+          _scannerController.disableScanning();
+        }
         _handleData(cardInfo);
       }
     } catch (_) {}
