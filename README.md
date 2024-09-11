@@ -111,6 +111,7 @@ Also `ScannerWidget` have another parameter you can specify:
  - `overlayOrientation` - set the default overlay orientation, by default `portrait`;
  - `cameraResolution` - resolution preset for camera, by default `high`;
  - `controller` - `ScannerWidgetController` widget controller to get scanned card details or error;
+ - `cardScanTries` - how many recognition varians to collect before provide scanning result;
 
 See `example/lib/ml_card_scanner.dart` for implementation.
 

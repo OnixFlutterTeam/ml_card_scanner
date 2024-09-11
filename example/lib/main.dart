@@ -4,7 +4,113 @@ import 'package:ml_card_scanner/ml_card_scanner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MaterialApp(home: MainScreen()));
+  runApp(const MaterialApp(home: InitialScreen()));
+}
+
+class InitialScreen extends StatefulWidget {
+  const InitialScreen({super.key});
+
+  @override
+  State<InitialScreen> createState() => _InitialScreenState();
+}
+
+class _InitialScreenState extends State<InitialScreen> {
+  CardInfo? _cardInfo;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Card Scanner Demo'),
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          (_cardInfo != null)
+              ? Expanded(
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      width: MediaQuery.of(context).size.width - 32,
+                      height: MediaQuery.of(context).size.width / 2,
+                      decoration: const BoxDecoration(
+                        color: Colors.blueGrey,
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(16),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            _cardInfo?.numberFormatted() ?? '',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _cardInfo?.expiry ?? '',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    letterSpacing: 2,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                _cardInfo?.type ?? '',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
+          const SizedBox(height: 16),
+          Center(
+            child: ElevatedButton(
+              onPressed: _scanCard,
+              child: const Text('Tap to Scan Card'),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  void _scanCard() async {
+    setState(() {
+      _cardInfo = null;
+    });
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) {
+          return const MainScreen();
+        },
+      ),
+    ) as CardInfo?;
+    if (result != null) {
+      setState(() {
+        _cardInfo = result;
+      });
+    }
+  }
 }
 
 class MainScreen extends StatefulWidget {
@@ -16,7 +122,6 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   final ScannerWidgetController _controller = ScannerWidgetController();
-  final ValueNotifier<CardInfo?> _cardInfo = ValueNotifier(null);
 
   @override
   void initState() {
@@ -29,41 +134,11 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Card Scanner Example'),
-      ),
-      body: Center(
-        child: Column(
-          children: [
-            Expanded(
-              child: ScannerWidget(
-                controller: _controller,
-                overlayOrientation: CardOrientation.landscape,
-                cameraResolution: CameraResolution.high,
-              ),
-            ),
-            Container(
-              width: MediaQuery.sizeOf(context).width,
-              color: Colors.white,
-              child: Column(
-                children: [
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  ValueListenableBuilder<CardInfo?>(
-                    valueListenable: _cardInfo,
-                    builder: (context, card, child) {
-                      return Text(card?.toString() ?? 'No Card Details');
-                    },
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+      body: ScannerWidget(
+        controller: _controller,
+        overlayOrientation: CardOrientation.landscape,
+        cameraResolution: CameraResolution.high,
+        oneShotScanning: true,
       ),
     );
   }
@@ -78,7 +153,9 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _onListenCard(CardInfo? value) {
-    _cardInfo.value = value;
+    if (value != null) {
+      Navigator.of(context).pop(value);
+    }
   }
 
   void _onError(ScannerException exception) {

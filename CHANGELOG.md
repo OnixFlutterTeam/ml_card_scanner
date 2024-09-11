@@ -1,6 +1,9 @@
-## 0.1.1
+## 0.2.0
 
 * Updated dependency versions
+* Improvements on productivity
+* Improvements on parser
+* Updated example project
 * Migrated example project from imperative Flutter's Gradle plugins to declarative
 
 ## 0.1.0

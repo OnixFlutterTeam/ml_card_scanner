@@ -1,3 +1,5 @@
+import 'package:ml_card_scanner/src/parser/card_parser_const.dart';
+
 extension StringExtension on String {
   String clean() => replaceAll(RegExp(r'\D'), '');
 
@@ -10,10 +12,28 @@ extension StringExtension on String {
         ..replaceAll('o', '0')
         ..replaceAll('O', '0');
 
-
   String possibleDateFormatted() {
+    if (isEmpty || length != CardParserConst.cardDateLength) {
+      return '';
+    }
     final m = substring(0, 2);
     final y = substring(2, 4);
     return '$m/$y';
+  }
+
+  int getDateMonthNumber() {
+    if (isEmpty || length != CardParserConst.cardDateLength) {
+      return 0;
+    }
+    final m = substring(0, 2);
+    return int.tryParse(m) ?? -1;
+  }
+
+  int getDateYearNumber() {
+    if (isEmpty || length != CardParserConst.cardDateLength) {
+      return 0;
+    }
+    final y = substring(2, 4);
+    return int.tryParse(y) ?? -1;
   }
 }
