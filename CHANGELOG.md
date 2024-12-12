@@ -1,3 +1,7 @@
+## 0.2.2-beta.1
+
+* Updated Ml kit dependency to v14
+
 ## 0.2.1
 
 * Fixed Android Gradle namespace issue

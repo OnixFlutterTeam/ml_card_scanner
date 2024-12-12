@@ -15,7 +15,6 @@ class DefaultParserAlgorithm extends ParserAlgorithm {
   @override
   CardInfo? parse(RecognizedText recognizedText) {
     CardInfo? cardOption;
-
     try {
       final elements =
           recognizedText.blocks.map((e) => e.text.clean()).toList();
