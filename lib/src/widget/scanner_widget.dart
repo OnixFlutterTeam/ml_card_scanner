@@ -68,6 +68,8 @@ class _ScannerWidgetState extends State<ScannerWidget>
       DeviceOrientation.portraitDown,
       DeviceOrientation.portraitUp,
     ]);
+
+    _processor.imgProcessor.debugCallback = _onDebugImage;
   }
 
   @override
@@ -89,7 +91,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
             CameraOverlayWidget(
               cardOrientation: widget.overlayOrientation,
               overlayBorderRadius: 25,
-              overlayColorFilter: Colors.black54,
+              overlayColorFilter: Colors.white30,
             ),
         widget.overlayTextBuilder?.call(context) ??
             Positioned(
@@ -98,6 +100,16 @@ class _ScannerWidgetState extends State<ScannerWidget>
               bottom: (MediaQuery.sizeOf(context).height / 5),
               child: const TextOverlayWidget(),
             ),
+
+        Align(
+          alignment: Alignment.bottomRight,
+          child: Container(
+            height: 320,
+              child: _debugImage != null
+                ? Image.memory(_debugImage!, fit: BoxFit.scaleDown)
+                : const Placeholder(),
+          ),
+        ),
       ],
     );
   }
@@ -172,6 +184,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
       cameraController.startImageStream(_onFrame);
     }
     _isInitialized.value = cameraController;
+
     return cameraController;
   }
 
@@ -255,5 +268,27 @@ class _ScannerWidgetState extends State<ScannerWidget>
   void _handleError(ScannerException exception) {
     final errorCallback = _scannerController.onError;
     errorCallback?.call(exception);
+  }
+
+
+  int _lastDebugUpdate = 0;
+  Uint8List? _debugImage;
+  void _onDebugImage(Uint8List bytes) {
+    if (_lastDebugUpdate == 0) {
+      _lastDebugUpdate = DateTime.now().millisecondsSinceEpoch;
+      return;
+    }
+
+    if (DateTime.now().millisecondsSinceEpoch - _lastDebugUpdate < 5000) {
+      return;
+    }
+
+
+    if (mounted) {
+      _debugImage = bytes;
+      _lastDebugUpdate = DateTime.now().millisecondsSinceEpoch;
+      setState(() {
+      });
+    }
   }
 }
