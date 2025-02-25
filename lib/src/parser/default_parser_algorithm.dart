@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:ml_card_scanner/src/model/card_info.dart';
 import 'package:ml_card_scanner/src/parser/card_parser_const.dart';
@@ -52,14 +53,15 @@ class DefaultParserAlgorithm extends ParserAlgorithm {
 
   @override
   String getCardNumber(List<String> inputs) {
-    return inputs.firstWhere(
-      (input) {
-        final cleanValue = input.fixPossibleMisspells();
-        return (cleanValue.length == CardParserConst.cardNumberLength) &&
-            (int.tryParse(cleanValue) ?? -1) != -1;
-      },
-      orElse: () => '',
-    );
+    for (final item in inputs) {
+      final cleanValue = item.fixPossibleMisspells();
+      debugPrint('getCardNumber: $item => $cleanValue');
+      if (cleanValue.length == CardParserConst.cardNumberLength &&
+          int.tryParse(cleanValue) != null) {
+        return cleanValue;
+      }
+    }
+    return '';
   }
 
   @override

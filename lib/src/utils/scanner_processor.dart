@@ -50,10 +50,53 @@ class ScannerProcessor {
     //   bytes,
     // );
 
-    final inputImage = imgProcessor.createInputImage(image, rotation);
+    final rawFormat = image.format.raw;
+    final rawRotation = rotation.rawValue;
+    final Uint8List bytes = Uint8List.fromList(
+      image.planes.fold(
+        <int>[],
+            (List<int> previousValue, element) =>
+        previousValue..addAll(element.bytes),
+      ),
+    );
+    final width = image.width;
+    final height = image.height;
+    final bytesPerRow = image.planes.first.bytesPerRow;
+    final format = InputImageFormatValue.fromRawValue(rawFormat);
+
+
+    //final inputImage = imgProcessor.createInputImage(image, rotation);
+
+    final inputImage = await createInputImageInIsolate(
+      rawBytes: bytes,
+      width: width,
+      height: height,
+      rawRotation: rawRotation,
+      rawFormat: rawFormat,
+      bytesPerRow: bytesPerRow,
+    );
+
+
+
+
+
+
+
+
+
 
     final recognizedText = await _recognizer.processImage(inputImage);
-    return parseAlgorithm.parse(recognizedText);
+
+    if (kDebugMode) {
+      debugPrint('\n\nrecognizedText: ${recognizedText.text}\n');
+      for (var e in recognizedText.blocks) {
+        debugPrint('blocks: ${e.text} -> ');
+      }
+    }
+
+    final parsedCard = await parseAlgorithm.parse(recognizedText);
+
+    return parsedCard;
   }
 
   void dispose() {
