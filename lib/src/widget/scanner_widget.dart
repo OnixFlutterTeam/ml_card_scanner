@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,6 @@ import 'package:ml_card_scanner/src/widget/text_overlay_widget.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ScannerWidget extends StatefulWidget {
-
   final CardOrientation overlayOrientation;
   final OverlayBuilder? overlayBuilder;
   final int scannerDelay;
@@ -27,6 +27,8 @@ class ScannerWidget extends StatefulWidget {
   final CameraPreviewBuilder? cameraPreviewBuilder;
   final OverlayTextBuilder? overlayTextBuilder;
   final int cardScanTries;
+  final bool usePreprocessingFilters;
+  final bool debugShowFilteredImage;
 
   const ScannerWidget({
     this.overlayBuilder,
@@ -38,6 +40,8 @@ class ScannerWidget extends StatefulWidget {
     this.cameraResolution = CameraResolution.high,
     this.cameraPreviewBuilder,
     this.overlayTextBuilder,
+    this.usePreprocessingFilters = false,
+    this.debugShowFilteredImage = false,
     super.key,
   });
 
@@ -48,7 +52,7 @@ class ScannerWidget extends StatefulWidget {
 class _ScannerWidgetState extends State<ScannerWidget>
     with WidgetsBindingObserver {
   final ValueNotifier<CameraController?> _isInitialized = ValueNotifier(null);
-  final ScannerProcessor _processor = ScannerProcessor();
+  late ScannerProcessor _processor;
   late CameraDescription _camera;
   late ScannerWidgetController _scannerController;
   late final ParserAlgorithm _algorithm =
@@ -60,6 +64,10 @@ class _ScannerWidgetState extends State<ScannerWidget>
   @override
   void initState() {
     super.initState();
+    _processor = ScannerProcessor(
+      useFilters: widget.usePreprocessingFilters,
+      debugMode: widget.debugShowFilteredImage,
+    );
     WidgetsBinding.instance.addObserver(this);
     _scannerController = widget.controller ?? ScannerWidgetController();
     _scannerController.addListener(_scanParamsListener);
@@ -69,12 +77,12 @@ class _ScannerWidgetState extends State<ScannerWidget>
       DeviceOrientation.portraitDown,
       DeviceOrientation.portraitUp,
     ]);
-
-    _processor.imgProcessor.debugCallback = _onDebugImage;
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.sizeOf(context);
+    final debugImageSize = min(screenSize.width, screenSize.height);
     return Stack(
       children: <Widget>[
         ValueListenableBuilder<CameraController?>(
@@ -101,16 +109,23 @@ class _ScannerWidgetState extends State<ScannerWidget>
               bottom: (MediaQuery.sizeOf(context).height / 5),
               child: const TextOverlayWidget(),
             ),
-
-        Align(
-          alignment: Alignment.bottomRight,
-          child: Container(
-            height: 320,
-              child: _debugImage != null
-                ? Image.memory(_debugImage!, fit: BoxFit.scaleDown)
-                : const Placeholder(),
+        if (widget.debugShowFilteredImage)
+          Align(
+            alignment: Alignment.bottomRight,
+            child: SizedBox(
+              width: debugImageSize,
+              height: debugImageSize,
+              child: StreamBuilder(
+                stream: _processor.imageStream,
+                builder: (_, snapshot) {
+                  if (snapshot.data != null) {
+                    return Image.memory(snapshot.data!, fit: BoxFit.scaleDown);
+                  }
+                  return const Placeholder();
+                },
+              ),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -269,27 +284,5 @@ class _ScannerWidgetState extends State<ScannerWidget>
   void _handleError(ScannerException exception) {
     final errorCallback = _scannerController.onError;
     errorCallback?.call(exception);
-  }
-
-
-  int _lastDebugUpdate = 0;
-  Uint8List? _debugImage;
-  void _onDebugImage(Uint8List bytes) {
-    if (_lastDebugUpdate == 0) {
-      _lastDebugUpdate = DateTime.now().millisecondsSinceEpoch;
-      return;
-    }
-
-    if (DateTime.now().millisecondsSinceEpoch - _lastDebugUpdate < 5000) {
-      return;
-    }
-
-
-    if (mounted) {
-      _debugImage = bytes;
-      _lastDebugUpdate = DateTime.now().millisecondsSinceEpoch;
-      setState(() {
-      });
-    }
   }
 }
