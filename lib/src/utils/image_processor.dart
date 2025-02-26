@@ -58,9 +58,14 @@ class ImageProcessor {
     required int rawFormat,
   }) {
     try {
+      
+      debugPrint('createInputImage: format: ${InputImageFormatValue.fromRawValue(rawFormat)}, width: $width, height: $height');
+      
       var baseImage = Platform.isAndroid
           ? _convertNV21toImage(rawBytes, width, height)
-          : _convertBGRA8888toImage(rawBytes, width, height);
+          : _convertBGRA8888toImage(rawBytes, width, height, bytesPerRow);
+
+      //_debugCallback(baseImage);
 
       baseImage = img.grayscale(baseImage, amount: 1.0);
       baseImage = img.adjustColor(
@@ -70,17 +75,17 @@ class ImageProcessor {
       );
       // baseImage = applySharpening(baseImage);
       // baseImage = applyThreshold(baseImage, threshold: 60,);
-      //_debugCallback(baseImage);
+      _debugCallback(baseImage);
 
       final Uint8List finalRGBA = Uint8List.fromList(baseImage.getBytes());
-      final Uint8List bgraBytes = convertRgbaToNv21(finalRGBA, width, height);
+      final Uint8List bgraBytes = Platform.isAndroid ? convertRgbaToNv21(finalRGBA, width, height) : rgbaToBgra(finalRGBA);
 
       return InputImage.fromBytes(
         bytes: bgraBytes,
         metadata: InputImageMetadata(
           size: Size(width.toDouble(), height.toDouble()),
           rotation: InputImageRotationValue.fromRawValue(rawRotation)!,
-          format: InputImageFormat.nv21,
+          format: Platform.isAndroid ? InputImageFormat.nv21 : InputImageFormat.bgra8888,
           bytesPerRow: width * 4,
         ),
       );
@@ -97,6 +102,16 @@ class ImageProcessor {
       debugCallback!(pngBytes);
     }
   }
+}
+
+Uint8List rgbaToBgra(Uint8List rgba) {
+  for (int i = 0; i < rgba.length; i += 4) {
+    // Swap R and B
+    int temp = rgba[i];
+    rgba[i] = rgba[i + 2];
+    rgba[i + 2] = temp;
+  }
+  return rgba;
 }
 
 img.Image applySharpening(img.Image image) {
@@ -156,18 +171,42 @@ img.Image applyThreshold(img.Image image, {int threshold = 128}) {
   return newImage;
 }
 
-img.Image _convertBGRA8888toImage(Uint8List bgraBytes, int width, int height) {
-  Uint8List rgbaBytes = Uint8List(bgraBytes.length);
+/// Convert BGRA8888 to RGBA8888
+Uint8List convertBGRAtoRGBA(Uint8List bgraBytes) {
   for (int i = 0; i < bgraBytes.length; i += 4) {
-    rgbaBytes[i] = bgraBytes[i + 2];
-    rgbaBytes[i + 1] = bgraBytes[i + 1];
-    rgbaBytes[i + 2] = bgraBytes[i];
-    rgbaBytes[i + 3] = bgraBytes[i + 3];
+    // Swap Red and Blue
+    int temp = bgraBytes[i]; // B
+    bgraBytes[i] = bgraBytes[i + 2]; // R ← B
+    bgraBytes[i + 2] = temp; // B ← R
+  }
+  return bgraBytes;
+}
+
+/// Convert BGRA8888 CameraImage to img.Image
+
+img.Image _convertBGRA8888toImage(Uint8List bgraBytes, int width, int height, int bytesPerRow) {
+  Uint8List alignedBytes = Uint8List(width * height * 4);
+
+  int index = 0;
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      int pixelIndex = (y * bytesPerRow) + (x * 4);
+
+      // Ensure we don't go out of bounds
+      if (pixelIndex + 3 >= bgraBytes.length) break;
+
+      alignedBytes[index] = bgraBytes[pixelIndex + 2]; // R <- B
+      alignedBytes[index + 1] = bgraBytes[pixelIndex + 1]; // G
+      alignedBytes[index + 2] = bgraBytes[pixelIndex]; // B <- R
+      alignedBytes[index + 3] = bgraBytes[pixelIndex + 3]; // A
+
+      index += 4;
+    }
   }
   return img.Image.fromBytes(
     width: width,
     height: height,
-    bytes: rgbaBytes.buffer,
+    bytes: alignedBytes.buffer,
     format: img.Format.uint8,
     numChannels: 4,
     order: img.ChannelOrder.rgba,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:camera/camera.dart';
@@ -50,6 +51,9 @@ class ScannerProcessor {
     //   bytes,
     // );
 
+
+    print('image.planes: ${image.planes.length}');
+
     final rawFormat = image.format.raw;
     final rawRotation = rotation.rawValue;
     final Uint8List bytes = Uint8List.fromList(
@@ -62,10 +66,8 @@ class ScannerProcessor {
     final width = image.width;
     final height = image.height;
     final bytesPerRow = image.planes.first.bytesPerRow;
-    final format = InputImageFormatValue.fromRawValue(rawFormat);
 
 
-    //final inputImage = imgProcessor.createInputImage(image, rotation);
 
     final inputImage = await createInputImageInIsolate(
       rawBytes: bytes,
@@ -75,6 +77,15 @@ class ScannerProcessor {
       rawFormat: rawFormat,
       bytesPerRow: bytesPerRow,
     );
+
+    // final inputImage = imgProcessor.createInputImage(
+    //   rawBytes: bytes,
+    //   width: width,
+    //   height: height,
+    //   rawRotation: rawRotation,
+    //   rawFormat: rawFormat,
+    //   bytesPerRow: bytesPerRow,
+    // );
 
 
 

@@ -17,6 +17,7 @@ import 'package:ml_card_scanner/src/widget/text_overlay_widget.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ScannerWidget extends StatefulWidget {
+
   final CardOrientation overlayOrientation;
   final OverlayBuilder? overlayBuilder;
   final int scannerDelay;

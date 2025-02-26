@@ -5,6 +5,10 @@ description: Demonstrates how to use the ml_card_scanner plugin.
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
+
+version: 1.0.0+1
+
+
 environment:
   sdk: ">=3.0.0 <4.0.0"
 
