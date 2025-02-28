@@ -86,8 +86,8 @@ InputImage createInputImage({
     baseImage = img.grayscale(baseImage);
     baseImage = img.adjustColor(
       baseImage,
-      contrast: 3.0, // High contrast for better edge detection
-      //brightness: 1.5,  // Slight increase to lighten dark areas
+      contrast: 3.0,
+      //brightness: 1.5,
     );
 
     width = 640;

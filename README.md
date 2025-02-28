@@ -112,6 +112,7 @@ Also `ScannerWidget` have another parameter you can specify:
  - `cameraResolution` - resolution preset for camera, by default `high`;
  - `controller` - `ScannerWidgetController` widget controller to get scanned card details or error;
  - `cardScanTries` - how many recognition varians to collect before provide scanning result;
+ - `usePreprocessingFilters` - applying built in preprocessing filters to improve recognition quality; would slow down the recognition process, but improve the quality;
 
 See `example/lib/ml_card_scanner.dart` for implementation.
 

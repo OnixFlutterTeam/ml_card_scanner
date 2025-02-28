@@ -139,8 +139,6 @@ class _MainScreenState extends State<MainScreen> {
         overlayOrientation: CardOrientation.landscape,
         cameraResolution: CameraResolution.max,
         oneShotScanning: true,
-        usePreprocessingFilters: true,
-        debugShowFilteredImage: false,
       ),
     );
   }

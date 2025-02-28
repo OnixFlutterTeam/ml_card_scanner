@@ -11,19 +11,21 @@ import 'package:ml_card_scanner/src/utils/image_processor.dart';
 import 'package:ml_card_scanner/src/utils/stream_debouncer.dart';
 
 class ScannerProcessor {
-  final bool _useFilters;
-  final bool _debugMode;
-  final TextRecognizer _recognizer =
-      TextRecognizer(script: TextRecognitionScript.latin);
 
-  late final StreamController<Uint8List>? _debugImageStreamController;
+  static const _kDebugOutputCooldownMillis = 5000;
+  final bool _usePreprocessingFilters;
+  final bool _debugOutputFilteredImage;
+  final TextRecognizer _recognizer = TextRecognizer(
+    script: TextRecognitionScript.latin,
+  );
+  StreamController<Uint8List>? _debugImageStreamController;
 
   ScannerProcessor({
-    bool useFilters = false,
-    bool debugMode = false,
-  })  : _useFilters = useFilters,
-        _debugMode = debugMode {
-    if (debugMode) {
+    bool usePreprocessingFilters = false,
+    bool debugOutputFilteredImage = false,
+  })  : _usePreprocessingFilters = debugOutputFilteredImage,
+        _debugOutputFilteredImage = debugOutputFilteredImage {
+    if (_debugOutputFilteredImage) {
       _debugImageStreamController = StreamController<Uint8List>.broadcast();
     }
   }
@@ -31,7 +33,7 @@ class ScannerProcessor {
   Stream<Uint8List>? get imageStream =>
       _debugImageStreamController?.stream.transform(
         debounceTransformer(
-          const Duration(milliseconds: 5000),
+          const Duration(milliseconds: _kDebugOutputCooldownMillis),
         ),
       );
 
@@ -41,7 +43,7 @@ class ScannerProcessor {
     InputImageRotation rotation,
   ) async {
     late InputImage inputImage;
-    if (!_useFilters) {
+    if (!_usePreprocessingFilters) {
       final format = InputImageFormatValue.fromRawValue(
         image.format.raw,
       );
@@ -83,7 +85,7 @@ class ScannerProcessor {
       final bytesPerRow = image.planes.first.bytesPerRow;
 
       ReceivePort? receivePort;
-      if (_debugMode) {
+      if (_debugOutputFilteredImage) {
         receivePort = ReceivePort();
         receivePort.listen(
           (message) {
@@ -117,6 +119,7 @@ class ScannerProcessor {
       }
       debugPrint('\n');
     }*/
+
     final parsedCard = await parseAlgorithm.parse(recognizedText);
     return parsedCard;
   }

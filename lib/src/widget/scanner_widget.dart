@@ -18,6 +18,7 @@ import 'package:ml_card_scanner/src/widget/text_overlay_widget.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ScannerWidget extends StatefulWidget {
+
   final CardOrientation overlayOrientation;
   final OverlayBuilder? overlayBuilder;
   final int scannerDelay;
@@ -28,7 +29,6 @@ class ScannerWidget extends StatefulWidget {
   final OverlayTextBuilder? overlayTextBuilder;
   final int cardScanTries;
   final bool usePreprocessingFilters;
-  final bool debugShowFilteredImage;
 
   const ScannerWidget({
     this.overlayBuilder,
@@ -41,7 +41,6 @@ class ScannerWidget extends StatefulWidget {
     this.cameraPreviewBuilder,
     this.overlayTextBuilder,
     this.usePreprocessingFilters = false,
-    this.debugShowFilteredImage = false,
     super.key,
   });
 
@@ -51,6 +50,8 @@ class ScannerWidget extends StatefulWidget {
 
 class _ScannerWidgetState extends State<ScannerWidget>
     with WidgetsBindingObserver {
+
+  static const _kDebugOutputFilteredImage = false;
   final ValueNotifier<CameraController?> _isInitialized = ValueNotifier(null);
   late ScannerProcessor _processor;
   late CameraDescription _camera;
@@ -65,8 +66,8 @@ class _ScannerWidgetState extends State<ScannerWidget>
   void initState() {
     super.initState();
     _processor = ScannerProcessor(
-      useFilters: widget.usePreprocessingFilters,
-      debugMode: widget.debugShowFilteredImage,
+      usePreprocessingFilters: widget.usePreprocessingFilters,
+      debugOutputFilteredImage: _kDebugOutputFilteredImage,
     );
     WidgetsBinding.instance.addObserver(this);
     _scannerController = widget.controller ?? ScannerWidgetController();
@@ -109,7 +110,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
               bottom: (MediaQuery.sizeOf(context).height / 5),
               child: const TextOverlayWidget(),
             ),
-        if (widget.debugShowFilteredImage)
+        if (_kDebugOutputFilteredImage)
           Align(
             alignment: Alignment.bottomRight,
             child: SizedBox(
