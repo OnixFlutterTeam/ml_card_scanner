@@ -4,6 +4,8 @@
 * Added option for launching with preprocessing image before sending to ml model
 * Added debug output of preprocessed image
 * Implemented preprocessing filters: grayscale, increasing contrast, resizing to native learned images for ml kit size
+* Added script to example for quick pods re installation
+* Added image dependency for preprocessing
 
 ## 0.2.1
 
