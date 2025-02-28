@@ -1,3 +1,10 @@
+## 0.2.3
+
+* Fixed default parser
+* Added option for launching with preprocessing image before sending to ml model
+* Added debug output of preprocessed image
+* Implemented preprocessing filters: grayscale, increasing contrast, resizing to native learned images for ml kit size
+
 ## 0.2.1
 
 * Fixed Android Gradle namespace issue
