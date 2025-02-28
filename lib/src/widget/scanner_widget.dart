@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ import 'package:ml_card_scanner/src/widget/text_overlay_widget.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ScannerWidget extends StatefulWidget {
+
   final CardOrientation overlayOrientation;
   final OverlayBuilder? overlayBuilder;
   final int scannerDelay;
@@ -26,6 +28,7 @@ class ScannerWidget extends StatefulWidget {
   final CameraPreviewBuilder? cameraPreviewBuilder;
   final OverlayTextBuilder? overlayTextBuilder;
   final int cardScanTries;
+  final bool usePreprocessingFilters;
 
   const ScannerWidget({
     this.overlayBuilder,
@@ -37,6 +40,7 @@ class ScannerWidget extends StatefulWidget {
     this.cameraResolution = CameraResolution.high,
     this.cameraPreviewBuilder,
     this.overlayTextBuilder,
+    this.usePreprocessingFilters = false,
     super.key,
   });
 
@@ -46,8 +50,10 @@ class ScannerWidget extends StatefulWidget {
 
 class _ScannerWidgetState extends State<ScannerWidget>
     with WidgetsBindingObserver {
+
+  static const _kDebugOutputFilteredImage = false;
   final ValueNotifier<CameraController?> _isInitialized = ValueNotifier(null);
-  final ScannerProcessor _processor = ScannerProcessor();
+  late ScannerProcessor _processor;
   late CameraDescription _camera;
   late ScannerWidgetController _scannerController;
   late final ParserAlgorithm _algorithm =
@@ -59,6 +65,10 @@ class _ScannerWidgetState extends State<ScannerWidget>
   @override
   void initState() {
     super.initState();
+    _processor = ScannerProcessor(
+      usePreprocessingFilters: widget.usePreprocessingFilters,
+      debugOutputFilteredImage: _kDebugOutputFilteredImage,
+    );
     WidgetsBinding.instance.addObserver(this);
     _scannerController = widget.controller ?? ScannerWidgetController();
     _scannerController.addListener(_scanParamsListener);
@@ -72,6 +82,8 @@ class _ScannerWidgetState extends State<ScannerWidget>
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.sizeOf(context);
+    final debugImageSize = min(screenSize.width, screenSize.height);
     return Stack(
       children: <Widget>[
         ValueListenableBuilder<CameraController?>(
@@ -89,7 +101,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
             CameraOverlayWidget(
               cardOrientation: widget.overlayOrientation,
               overlayBorderRadius: 25,
-              overlayColorFilter: Colors.black54,
+              overlayColorFilter: Colors.white30,
             ),
         widget.overlayTextBuilder?.call(context) ??
             Positioned(
@@ -98,6 +110,23 @@ class _ScannerWidgetState extends State<ScannerWidget>
               bottom: (MediaQuery.sizeOf(context).height / 5),
               child: const TextOverlayWidget(),
             ),
+        if (_kDebugOutputFilteredImage)
+          Align(
+            alignment: Alignment.bottomRight,
+            child: SizedBox(
+              width: debugImageSize,
+              height: debugImageSize,
+              child: StreamBuilder(
+                stream: _processor.imageStream,
+                builder: (_, snapshot) {
+                  if (snapshot.data != null) {
+                    return Image.memory(snapshot.data!, fit: BoxFit.scaleDown);
+                  }
+                  return const Placeholder();
+                },
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -172,6 +201,7 @@ class _ScannerWidgetState extends State<ScannerWidget>
       cameraController.startImageStream(_onFrame);
     }
     _isInitialized.value = cameraController;
+
     return cameraController;
   }
 

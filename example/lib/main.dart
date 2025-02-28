@@ -137,7 +137,7 @@ class _MainScreenState extends State<MainScreen> {
       body: ScannerWidget(
         controller: _controller,
         overlayOrientation: CardOrientation.landscape,
-        cameraResolution: CameraResolution.high,
+        cameraResolution: CameraResolution.max,
         oneShotScanning: true,
       ),
     );
